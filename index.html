@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>getwell.ai | High School Mental Health & Wellness</title>
+  <meta name="description" content="A warm, peaceful mental health sanctuary for high schoolers dealing with anxiety, depression, self-harm, family pressure, and substance support.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+</head>
+<body>
+
+  <!-- DISCREET MODE (Privacy Shield - ESC key or button) -->
+  <div id="discreet-mode" aria-hidden="true">
+    <div class="discreet-header">
+      <h2>AP Calculus & Chemistry Study Notes — Chapter 4: Integration & Equilibrium</h2>
+      <button onclick="toggleDiscreetMode()" style="background:#e0e0e0; border:1px solid #999; padding:6px 14px; cursor:pointer; font-size:12px; font-weight:bold;">Close Notes (Return)</button>
+    </div>
+    <div style="font-size:14px; line-height:1.7;">
+      <h3>1. Fundamental Theorem of Calculus</h3>
+      <p>If <em>f</em> is continuous on [a, b], then the function <em>F(x) = &int;<sub>a</sub><sup>x</sup> f(t)dt</em> is differentiable on (a, b) and <em>F'(x) = f(x)</em>.</p>
+      <hr style="margin:15px 0; border:none; border-top:1px solid #ccc;">
+      <h3>2. Chemical Equilibrium Constant (K<sub>eq</sub>)</h3>
+      <p>For a general reaction <em>aA + bB &rarr; cC + dD</em>, the equilibrium expression is given by <strong>K<sub>eq</sub> = [C]<sup>c</sup>[D]<sup>d</sup> / ([A]<sup>a</sup>[B]<sup>b</sup>)</strong>.</p>
+      <p><em>Note: Pure solids and liquids are omitted from the equilibrium expression.</em></p>
+    </div>
+  </div>
+
+  <!-- MAIN APP HEADER -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand" onclick="switchTab('dashboard')">
+        <div class="brand-icon">🌸</div>
+        <div class="brand-text">
+          <h1>getwell.ai</h1>
+          <p>Mindfulness &bull; Support &bull; Healing</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn-discreet" title="Hide app quickly if someone walks by (Press ESC)" onclick="toggleDiscreetMode()">
+          🛡️ Quick Privacy Shield <kbd style="font-size:0.7rem; opacity:0.8; background:rgba(0,0,0,0.1); padding:1px 4px; border-radius:3px;">ESC</kbd>
+        </button>
+
+        <button class="btn-crisis" onclick="openCrisisModal()">
+          🆘 24/7 Crisis Help
+        </button>
+
+        <button class="icon-btn" id="theme-toggle-btn" title="Toggle Soft Dark / Warm Light" onclick="toggleTheme()">
+          🌙
+        </button>
+
+        <div class="theme-picker">
+          <button class="icon-btn" title="Change background color" onclick="toggleThemePicker(event)">🎨</button>
+          <div class="theme-picker-menu" id="theme-picker-menu">
+            <div class="theme-picker-title">Background</div>
+            <div class="theme-swatches">
+              <button class="swatch swatch-lavender" data-bg="lavender" onclick="setBackground('lavender')" title="Lavender (default)"></button>
+              <button class="swatch swatch-peach" data-bg="peach" onclick="setBackground('peach')" title="Warm Peach"></button>
+              <button class="swatch swatch-mint" data-bg="mint" onclick="setBackground('mint')" title="Fresh Mint"></button>
+              <button class="swatch swatch-sunrise" data-bg="sunrise" onclick="setBackground('sunrise')" title="Sunrise Yellow"></button>
+              <button class="swatch swatch-sky" data-bg="sky" onclick="setBackground('sky')" title="Soft Sky Blue"></button>
+              <button class="swatch swatch-rose" data-bg="rose" onclick="setBackground('rose')" title="Rose Petal"></button>
+              <button class="swatch swatch-sage" data-bg="sage" onclick="setBackground('sage')" title="Sage"></button>
+              <button class="swatch swatch-lilac" data-bg="lilac" onclick="setBackground('lilac')" title="Lilac Dream"></button>
+              <button class="swatch swatch-sand" data-bg="sand" onclick="setBackground('sand')" title="Warm Sand"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- AMBIENT AUDIO TOOLBAR -->
+  <div style="max-width: 1300px; margin: 18px auto 0; padding: 0 24px;">
+    <div class="audio-widget">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:1.3rem;">🎧</span>
+        <div>
+          <h4 style="font-size:0.88rem; font-weight:800;">Calming Soundscapes</h4>
+          <p style="font-size:0.76rem; color:var(--text-muted);">Peaceful binaural tones & natural sound synths</p>
+        </div>
+      </div>
+      <div class="audio-controls">
+        <button class="btn-audio" data-sound="rain" onclick="toggleAudioSound('rain')">🌧️ Soft Rain</button>
+        <button class="btn-audio" data-sound="waves" onclick="toggleAudioSound('waves')">🌊 Ocean Waves</button>
+        <button class="btn-audio" data-sound="binaural" onclick="toggleAudioSound('binaural')">🧠 Focus 432Hz</button>
+        <button class="btn-audio" data-sound="piano" onclick="toggleAudioSound('piano')">🎹 Warm Hum</button>
+        <button class="btn-audio btn-spotify" onclick="openSpotifyModal()">🎵 My Song (Spotify)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SPOTIFY CUSTOM MUSIC MODAL -->
+  <div class="modal-overlay" id="spotify-modal" onclick="closeSpotifyOnOverlay(event)">
+    <div class="modal-box" style="max-width:500px;">
+      <button class="modal-close" onclick="closeSpotifyModal()">✕</button>
+      <h2 style="font-size:1.3rem; font-weight:800; color:#1DB954; margin-bottom:8px;">🎵 Play Your Favorite Song</h2>
+      <p style="font-size:0.9rem; color:var(--text-secondary); margin-bottom:16px;">Paste any Spotify track, playlist, or album link and we'll open the embedded player right here — sync it to your mood.</p>
+
+      <div class="form-group">
+        <label class="form-label">Spotify link OR search term</label>
+        <input type="text" class="form-control" id="spotify-input" placeholder="https://open.spotify.com/track/... or e.g. 'lo-fi study'">
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn-primary" style="background:linear-gradient(135deg, #1DB954, #1ed760);" onclick="loadSpotify()">▶️ Play Here</button>
+        <button class="btn-secondary" onclick="openSpotifyExternal()">🔗 Open in Spotify</button>
+      </div>
+
+      <div id="spotify-embed-container" style="margin-top:18px;"></div>
+
+      <p style="font-size:0.72rem; color:var(--text-muted); margin-top:14px;">Tip: On any Spotify song, tap Share → Copy Link, then paste it here. Full playback requires Spotify Premium in the embed.</p>
+    </div>
+  </div>
+
+  <!-- MAIN BODY WRAPPER -->
+  <div class="main-wrapper">
+
+    <!-- SIDEBAR NAV -->
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Core Sanctuary</div>
+      <a class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')">
+        <span class="nav-icon">🏠</span> Dashboard
+      </a>
+      <a class="nav-item" data-tab="anxiety" onclick="switchTab('anxiety')">
+        <span class="nav-icon">🌬️</span> Anxiety & Panic
+      </a>
+      <a class="nav-item" data-tab="depression" onclick="switchTab('depression')">
+        <span class="nav-icon">☀️</span> Depression & Energy
+      </a>
+      <a class="nav-item" data-tab="selfharm" onclick="switchTab('selfharm')">
+        <span class="nav-icon">🛡️</span> Self-Harm Safety
+      </a>
+      <a class="nav-item" data-tab="journal" onclick="switchTab('journal')">
+        <span class="nav-icon">📓</span> Venting & AI Assistant
+      </a>
+
+      <div class="nav-section-title" style="margin-top:14px;">Life & Growth</div>
+      <a class="nav-item" data-tab="parental" onclick="switchTab('parental')">
+        <span class="nav-icon">🏠</span> Family & Pressure
+      </a>
+      <a class="nav-item" data-tab="substance" onclick="switchTab('substance')">
+        <span class="nav-icon">🌱</span> Substance Support
+      </a>
+    </nav>
+
+    <!-- CONTENT PANES -->
+    <main class="content-container">
+
+      <!-- TAB 1: DASHBOARD -->
+      <section id="tab-dashboard" class="tab-pane active">
+        <div class="hero-card">
+          <div class="hero-content">
+            <div class="hero-badge">✨ Warm, Peaceful & Non-Judgmental Sanctuary</div>
+            <h2 class="hero-title">Welcome to getwell.ai — You don't have to carry it all alone.</h2>
+            <p class="hero-subtitle">High school can feel heavy. Whether you're feeling anxious, exhausted, pressured by family, or overwhelmed, getwell.ai is your safe space built to help you ground and breathe.</p>
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+              <button class="btn-primary" onclick="switchTab('anxiety')">🌬️ Start Grounding</button>
+              <button class="btn-secondary" onclick="openCrisisModal()">🆘 24/7 Hotlines</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- MOOD CHECK-IN -->
+        <div class="mood-bar-card mood-check-card" style="margin-top:22px;">
+          <h3 style="font-size:1.15rem; font-weight:800;">How are you feeling right now?</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted);">Tap an emoji, or type your own feeling below — no wrong answers.</p>
+          <div class="mood-options">
+            <div class="mood-btn" onclick="selectMood('overwhelmed', '😣 Overwhelmed')">
+              <span class="mood-emoji">😣</span>
+              <span class="mood-label">Overwhelmed</span>
+            </div>
+            <div class="mood-btn" onclick="selectMood('anxious', '😰 Anxious')">
+              <span class="mood-emoji">😰</span>
+              <span class="mood-label">Anxious</span>
+            </div>
+            <div class="mood-btn" onclick="selectMood('exhausted', '😮‍💨 Exhausted')">
+              <span class="mood-emoji">😮‍💨</span>
+              <span class="mood-label">Exhausted</span>
+            </div>
+            <div class="mood-btn" onclick="selectMood('stressed', '😩 Stressed')">
+              <span class="mood-emoji">😩</span>
+              <span class="mood-label">Stressed</span>
+            </div>
+            <div class="mood-btn" onclick="selectMood('angry', '😤 Angry')">
+              <span class="mood-emoji">😤</span>
+              <span class="mood-label">Angry</span>
+            </div>
+            <div class="mood-btn" onclick="selectMood('sad', '😔 Sad')">
+              <span class="mood-emoji">😔</span>
+              <span class="mood-label">Sad</span>
+            </div>
+            <div class="mood-btn" onclick="selectMood('lonely', '🥺 Lonely')">
+              <span class="mood-emoji">🥺</span>
+              <span class="mood-label">Lonely</span>
+            </div>
+            <div class="mood-btn" onclick="selectMood('okay', '😐 Managing')">
+              <span class="mood-emoji">😐</span>
+              <span class="mood-label">Managing</span>
+            </div>
+            <div class="mood-btn" onclick="selectMood('calm', '😌 Calm')">
+              <span class="mood-emoji">😌</span>
+              <span class="mood-label">Calm</span>
+            </div>
+            <div class="mood-btn" onclick="selectMood('happy', '😊 Happy')">
+              <span class="mood-emoji">😊</span>
+              <span class="mood-label">Happy</span>
+            </div>
+            <div class="mood-btn" onclick="selectMood('hopeful', '✨ Hopeful')">
+              <span class="mood-emoji">✨</span>
+              <span class="mood-label">Hopeful</span>
+            </div>
+            <div class="mood-btn" onclick="selectMood('proud', '💪 Proud')">
+              <span class="mood-emoji">💪</span>
+              <span class="mood-label">Proud</span>
+            </div>
+          </div>
+
+          <div class="custom-mood-row">
+            <input type="text" id="custom-mood-input" class="form-control" placeholder="Or type it in your own words — e.g. 'burnt out', 'excited', 'meh'..." onkeypress="handleCustomMoodKey(event)">
+            <button class="btn-primary" onclick="submitCustomMood()">Log It</button>
+          </div>
+
+          <div id="mood-feedback" style="margin-top:14px; font-size:0.9rem; font-weight:700; color:var(--accent-lavender-dark);"></div>
+        </div>
+
+        <!-- FEATURE TILES -->
+        <h3 style="font-size:1.15rem; font-weight:800; margin-top:24px;">Explore Sanctuary Toolkits</h3>
+        <div class="cards-grid" style="margin-top:14px;">
+          <div class="feature-card" onclick="switchTab('anxiety')">
+            <div>
+              <div class="card-header-icon card-anxiety">🌬️</div>
+              <h4 class="card-title">Anxiety & Panic Relief</h4>
+              <p class="card-desc">Interactive box breathing, 5-4-3-2-1 sensory grounding, and cognitive thought reframing.</p>
+            </div>
+            <div class="card-action">Breathe Now &rarr;</div>
+          </div>
+
+          <div class="feature-card" onclick="switchTab('depression')">
+            <div>
+              <div class="card-header-icon card-depression">☀️</div>
+              <h4 class="card-title">Depression & Energy</h4>
+              <p class="card-desc">Micro-wins tracker, energy momentum logger, and gentle uplifting affirmation cards.</p>
+            </div>
+            <div class="card-action">Track Micro-Wins &rarr;</div>
+          </div>
+
+          <div class="feature-card" onclick="switchTab('selfharm')">
+            <div>
+              <div class="card-header-icon card-selfharm">🛡️</div>
+              <h4 class="card-title">Self-Harm Safety</h4>
+              <p class="card-desc">Urge surfing 15-min timer, safe sensory outlets (scribble canvas, ice, sound), and interactive safety plan.</p>
+            </div>
+            <div class="card-action">Safety Toolkit &rarr;</div>
+          </div>
+
+          <div class="feature-card" onclick="switchTab('parental')">
+            <div>
+              <div class="card-header-icon card-parental">🏠</div>
+              <h4 class="card-title">Family & Parental Pressure</h4>
+              <p class="card-desc">Boundary setting scripts, academic pressure reality check, and the Venting Vault burner.</p>
+            </div>
+            <div class="card-action">Explore Scripts &rarr;</div>
+          </div>
+
+          <div class="feature-card" onclick="switchTab('substance')">
+            <div>
+              <div class="card-header-icon card-substance">🌱</div>
+              <h4 class="card-title">Substance Usage Support</h4>
+              <p class="card-desc">Non-judgmental craving tracker, peer pressure refusal scripts, and harm-reduction guide.</p>
+            </div>
+            <div class="card-action">Habit Tracker &rarr;</div>
+          </div>
+
+          <div class="feature-card" onclick="switchTab('journal')">
+            <div>
+              <div class="card-header-icon card-parental" style="background:var(--bg-lavender-subtle);">📓</div>
+              <h4 class="card-title">getwell.ai Assistant</h4>
+              <p class="card-desc">Talk to your empathetic AI Grounding Assistant or write in your private encrypted-feeling journal.</p>
+            </div>
+            <div class="card-action">Open Venting Space &rarr;</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: ANXIETY & PANIC RELIEF -->
+      <section id="tab-anxiety" class="tab-pane">
+        <h2 style="font-size:1.5rem; font-weight:800; margin-bottom:8px;">🌬️ Anxiety & Panic Relief Toolkit</h2>
+        <p style="color:var(--text-secondary); margin-bottom:20px;">Slow down your heart rate, ground your mind, and quiet racing panic.</p>
+
+        <!-- Box Breathing Component (Full width top) -->
+        <div class="breathing-box" style="max-width:520px; margin:0 auto;">
+          <h3 style="font-size:1.15rem; font-weight:800;">Box Breathing (4-4-4-4)</h3>
+          <p style="font-size:0.82rem; color:var(--text-muted); margin-top:4px;">Inhale 4s &bull; Hold 4s &bull; Exhale 4s &bull; Hold 4s</p>
+
+          <div class="breathing-circle-container">
+            <div class="breathing-circle" id="breath-circle"></div>
+            <div class="breathing-text" id="breath-text">Ready</div>
+          </div>
+
+          <div style="display:flex; gap:10px;">
+            <button class="btn-primary" id="start-breath-btn" onclick="toggleBreathing()">▶️ Start Guided Breath</button>
+            <button class="btn-secondary" onclick="resetBreathing()">⏹️ Reset</button>
+          </div>
+        </div>
+
+        <!-- Scrap the Anxiety - Multiple Reframe Cards -->
+        <div class="mood-bar-card" style="margin-top:24px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+              <h3 style="font-size:1.2rem; font-weight:800;">💭 Scrap the Anxiety — Cognitive Reframing</h3>
+              <p style="font-size:0.86rem; color:var(--text-muted); margin-top:4px;">Common anxious thoughts on top → healthier reframe on the bottom. Swap in new scenarios anytime.</p>
+            </div>
+            <button class="btn-secondary" onclick="shuffleScrapCards()">🔄 Shuffle Cards</button>
+          </div>
+
+          <div class="scrap-grid" id="scrap-grid">
+            <!-- populated by anxiety.js -->
+          </div>
+        </div>
+
+        <!-- 5-4-3-2-1 Grounding -->
+        <div class="mood-bar-card" style="margin-top:24px;">
+          <h3 style="font-size:1.15rem; font-weight:800;">5-4-3-2-1 Sensory Grounding Technique</h3>
+          <p style="font-size:0.84rem; color:var(--text-muted);">If you feel detached or panicking, look around your room and log 5 things:</p>
+
+          <div class="grounding-steps">
+            <div class="grounding-step-item">
+              <div class="step-num">5</div>
+              <input type="text" class="form-control" placeholder="5 Things you can SEE around you (e.g., desk lamp, window, notebook)">
+            </div>
+            <div class="grounding-step-item">
+              <div class="step-num" style="background:var(--accent-blue);">4</div>
+              <input type="text" class="form-control" placeholder="4 Things you can TOUCH (e.g., soft sweater, warm mug, wooden chair)">
+            </div>
+            <div class="grounding-step-item">
+              <div class="step-num" style="background:var(--accent-yellow-dark);">3</div>
+              <input type="text" class="form-control" placeholder="3 Things you can HEAR (e.g., fan hum, rain, distant music)">
+            </div>
+            <div class="grounding-step-item">
+              <div class="step-num" style="background:var(--accent-teal);">2</div>
+              <input type="text" class="form-control" placeholder="2 Things you can SMELL (e.g., pencil graphite, fresh air)">
+            </div>
+            <div class="grounding-step-item">
+              <div class="step-num" style="background:var(--accent-rose);">1</div>
+              <input type="text" class="form-control" placeholder="1 Good thing about yourself right now">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: DEPRESSION & ENERGY -->
+      <section id="tab-depression" class="tab-pane">
+        <h2 style="font-size:1.5rem; font-weight:800; margin-bottom:8px;">☀️ Depression & Energy Support</h2>
+        <p style="color:var(--text-secondary); margin-bottom:20px;">When energy is low, celebrate micro-wins. Tiny steps matter.</p>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:22px;">
+          <!-- Micro-Wins Checklist -->
+          <div class="mood-bar-card">
+            <h3 style="font-size:1.15rem; font-weight:800;">Today's Micro-Wins Checklist</h3>
+            <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:14px;">No achievement is too small when fighting depression.</p>
+
+            <div id="micro-wins-list">
+              <label class="micro-win-item">
+                <input type="checkbox" onchange="toggleMicroWin(this)">
+                <span>Drank a glass of water today</span>
+              </label>
+              <label class="micro-win-item">
+                <input type="checkbox" onchange="toggleMicroWin(this)">
+                <span>Got out of bed / stretched for 1 minute</span>
+              </label>
+              <label class="micro-win-item">
+                <input type="checkbox" onchange="toggleMicroWin(this)">
+                <span>Washed face or brushed teeth</span>
+              </label>
+              <label class="micro-win-item">
+                <input type="checkbox" onchange="toggleMicroWin(this)">
+                <span>Stepped outside or looked out a window</span>
+              </label>
+              <label class="micro-win-item">
+                <input type="checkbox" onchange="toggleMicroWin(this)">
+                <span>Ate a snack or meal</span>
+              </label>
+            </div>
+
+            <div style="display:flex; gap:8px; margin-top:14px;">
+              <input type="text" id="new-win-input" class="form-control" placeholder="Add custom micro-win...">
+              <button class="btn-secondary" onclick="addMicroWin()">+ Add</button>
+            </div>
+          </div>
+
+          <!-- Gentle Affirmation Deck -->
+          <div class="mood-bar-card" style="display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+              <h3 style="font-size:1.15rem; font-weight:800;">Uplifting Teen Affirmation</h3>
+              <div style="background:var(--bg-lavender-subtle); border:1px solid var(--border-glass); border-radius:var(--radius-lg); padding:30px; text-align:center; margin:22px 0;">
+                <p id="affirmation-text" style="font-size:1.1rem; font-weight:700; line-height:1.6; color:var(--accent-lavender-dark);">"You are allowed to rest without feeling guilty. Taking a break is not giving up."</p>
+              </div>
+            </div>
+            <button class="btn-primary" onclick="generateAffirmation()">✨ Generate New Affirmation</button>
+          </div>
+        </div>
+
+        <!-- Athlete Affirmations & Stay-Occupied Tips -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:22px; margin-top:24px;">
+          <div class="athlete-card">
+            <h3 style="font-size:1.15rem; font-weight:800;">🏆 Athlete Affirmations</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">Champion mindset quotes from athletes who pushed through doubt.</p>
+
+            <div class="athlete-quote-box">
+              <p id="athlete-quote" class="athlete-quote-text">"You have to be able to accept failure to get better."</p>
+              <p id="athlete-name" class="athlete-quote-author">— LeBron James</p>
+            </div>
+
+            <button class="btn-primary" style="background:linear-gradient(135deg, var(--accent-yellow), var(--accent-yellow-dark));" onclick="nextAthleteQuote()">🔄 Next Quote</button>
+          </div>
+
+          <div class="occupied-card">
+            <h3 style="font-size:1.15rem; font-weight:800;">🎯 Stay Occupied — Distraction Ideas</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">When your brain is spiraling, redirect the energy.</p>
+
+            <div id="occupied-tip-box" class="occupied-tip-box">
+              <span class="occupied-emoji" id="occupied-emoji">🎬</span>
+              <p id="occupied-tip" class="occupied-tip-text">Put on a comfort movie you've seen a million times — no thinking required.</p>
+            </div>
+
+            <div class="occupied-actions">
+              <button class="btn-secondary occupied-chip" onclick="showOccupiedTip('movies')">🎬 Movies/TV</button>
+              <button class="btn-secondary occupied-chip" onclick="showOccupiedTip('games')">🎮 Games</button>
+              <button class="btn-secondary occupied-chip" onclick="showOccupiedTip('creative')">🎨 Creative</button>
+              <button class="btn-secondary occupied-chip" onclick="showOccupiedTip('active')">🏃 Active</button>
+              <button class="btn-secondary occupied-chip" onclick="showOccupiedTip('social')">👥 Social</button>
+              <button class="btn-secondary occupied-chip" onclick="showOccupiedTip('random')">🎲 Random</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mood & Energy History Chart -->
+        <div class="mood-bar-card" style="margin-top:24px;">
+          <h3 style="font-size:1.15rem; font-weight:800;">Weekly Energy & Mood Graph</h3>
+          <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:14px;">Visualization of your logged emotions this week.</p>
+          <div style="width:100%; height:180px;" id="mood-chart-container">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: SELF-HARM SAFETY -->
+      <section id="tab-selfharm" class="tab-pane">
+        <h2 style="font-size:1.5rem; font-weight:800; margin-bottom:8px;">🛡️ Self-Harm Safety & Urge Toolkit</h2>
+        <p style="color:var(--text-secondary); margin-bottom:20px;">You deserve physical and emotional safety. Let's navigate the wave together safely.</p>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:22px;">
+          
+          <!-- Ride the Wave 15-Min Timer -->
+          <div class="mood-bar-card" style="text-align:center;">
+            <h3 style="font-size:1.15rem; font-weight:800;">🌊 Ride the Wave (15-Minute Urge Timer)</h3>
+            <p style="font-size:0.82rem; color:var(--text-muted);">Urges peak like ocean waves and pass within 15-20 minutes. Focus on staying safe just for this timer.</p>
+
+            <div class="timer-display" id="urge-timer-display">15:00</div>
+
+            <div style="display:flex; justify-content:center; gap:10px; margin-top:14px;">
+              <button class="btn-primary" id="timer-start-btn" onclick="toggleUrgeTimer()">▶️ Ride the Wave</button>
+              <button class="btn-secondary" onclick="resetUrgeTimer()">⏹️ Reset</button>
+            </div>
+          </div>
+
+          <!-- Safe Sensory Outlets Canvas & Simulator -->
+          <div class="mood-bar-card">
+            <h3 style="font-size:1.15rem; font-weight:800;">🎨 Tension Scribble Canvas & Outlets</h3>
+            <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:10px;">Drag your mouse/finger below to scribble intensely and release built-up physical energy safely.</p>
+
+            <div class="outlet-canvas-container">
+              <canvas id="scribble-canvas"></canvas>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-top:12px; align-items:center;">
+              <button class="btn-secondary" style="padding:6px 14px; font-size:0.8rem;" onclick="clearScribbleCanvas()">🧹 Clear Canvas</button>
+              <button class="btn-secondary" style="padding:6px 14px; font-size:0.8rem;" onclick="playBandSnapSound()">💥 Snap Rubber Band Sound</button>
+            </div>
+          </div>
+
+          <!-- Distraction Mini-Game -->
+          <div class="mood-bar-card" style="text-align:center;">
+            <h3 style="font-size:1.15rem; font-weight:800;">🐍 Quick Distraction Game</h3>
+            <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:10px;">Give your hands and brain somewhere else to go for a few minutes. No pressure — pause anytime.</p>
+
+            <div class="game-canvas-wrap">
+              <canvas id="game-canvas" width="360" height="360"></canvas>
+              <div class="game-overlay" id="game-overlay">
+                <button class="btn-primary" onclick="startSnakeGame()">▶️ Play</button>
+                <p style="font-size:0.76rem; color:var(--text-muted); margin-top:10px;">Arrow keys / WASD, or swipe on mobile</p>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:center; gap:18px; margin-top:12px; font-size:0.85rem; font-weight:700; color:var(--text-secondary);">
+              <span>Score: <span id="game-score">0</span></span>
+              <span>Best: <span id="game-best">0</span></span>
+            </div>
+
+            <div style="display:flex; justify-content:center; gap:10px; margin-top:12px;">
+              <button class="btn-secondary" style="padding:6px 14px; font-size:0.8rem;" onclick="pauseSnakeGame()">⏸️ Pause</button>
+              <button class="btn-secondary" style="padding:6px 14px; font-size:0.8rem;" onclick="restartSnakeGame()">🔄 Restart</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Personal Safety Plan Builder -->
+        <div class="mood-bar-card" style="margin-top:24px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div>
+              <h3 style="font-size:1.15rem; font-weight:800;">📝 My Personal Safety Plan</h3>
+              <p style="font-size:0.82rem; color:var(--text-muted);">Fill out your customized emergency strategy. Saved securely in your browser.</p>
+            </div>
+            <button class="btn-primary" onclick="saveSafetyPlan()">💾 Save Safety Plan</button>
+          </div>
+
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-top:18px;">
+            <div class="form-group">
+              <label class="form-label">1. My Personal Triggers (What sets off the urge?)</label>
+              <textarea class="form-control" id="sp-triggers" placeholder="e.g., fights at home, failing a test, feeling isolated..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">2. Safe Internal Distractions (Things I can do alone)</label>
+              <textarea class="form-control" id="sp-distractions" placeholder="e.g., cold shower, intense music, scribbling canvas, walking..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">3. Safe Friends / Family to Reach Out To</label>
+              <textarea class="form-control" id="sp-people" placeholder="e.g., Alex (555-0192), Best friend Maya, School Counselor..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">4. Safe Environments / Places to Go</label>
+              <textarea class="form-control" id="sp-places" placeholder="e.g., Living room near family, public park, school library..."></textarea>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: PARENTAL & FAMILY PRESSURE -->
+      <section id="tab-parental" class="tab-pane">
+        <h2 style="font-size:1.5rem; font-weight:800; margin-bottom:8px;">🏠 Family & Parental Pressure</h2>
+        <p style="color:var(--text-secondary); margin-bottom:20px;">Navigating strict parents, high expectations, sibling care burdens, and family stress.</p>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:22px;">
+          <!-- Script Builder -->
+          <div class="mood-bar-card">
+            <h3 style="font-size:1.15rem; font-weight:800;">💬 Hard Conversation Script Generator</h3>
+            <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:12px;">Choose a scenario to get assertive, respectful scripts you can use with parents:</p>
+
+            <div class="form-group">
+              <select class="form-control" id="script-scenario-select" onchange="updateParentScript()">
+                <option value="academic">"My grades aren't perfect and I'm burning out."</option>
+                <option value="privacy">"I need privacy and personal space."</option>
+                <option value="parenting">"I am carrying too much responsibility for my siblings."</option>
+                <option value="future">"I don't want to pursue the exact career path you chose for me."</option>
+              </select>
+            </div>
+
+            <div style="background:var(--bg-surface); border:1.5px solid var(--border-glass); border-radius:var(--radius-md); padding:18px; min-height:140px; margin-top:14px;" id="script-result-box">
+              <!-- Script populates here -->
+            </div>
+          </div>
+
+          <!-- Venting Vault (Burner) -->
+          <div class="mood-bar-card" style="text-align:center;">
+            <h3 style="font-size:1.15rem; font-weight:800;">🔥 The Venting Vault (Thought Burner)</h3>
+            <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:12px;">Write down frustrating thoughts or feelings about family pressure, then shred & burn them away forever.</p>
+
+            <textarea class="form-control" id="vent-input" placeholder="Vent whatever is on your mind..." style="height:120px;"></textarea>
+
+            <button class="btn-primary" style="margin-top:14px; background:linear-gradient(135deg, var(--accent-rose), #e11d48);" onclick="burnThought()">🔥 Shred & Burn Thought</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 6: SUBSTANCE & DRUG SUPPORT -->
+      <section id="tab-substance" class="tab-pane">
+        <h2 style="font-size:1.5rem; font-weight:800; margin-bottom:8px;">🌱 Substance & Habit Support</h2>
+        <p style="color:var(--text-secondary); margin-bottom:20px;">Zero-judgment support for vaping, alcohol, weed, or pill usage, plus peer pressure refusal skills.</p>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:22px;">
+          <!-- Clean Streak & Goal Tracker -->
+          <div class="mood-bar-card">
+            <h3 style="font-size:1.15rem; font-weight:800;">Clean & Clear Streak Tracker</h3>
+            <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:14px;">Track your progress toward reducing or stopping substance usage.</p>
+
+            <div style="text-align:center; background:var(--bg-blue-subtle); padding:22px; border-radius:var(--radius-lg); border:1px solid var(--border-glass);">
+              <span style="font-size:3.2rem; font-weight:800; color:var(--accent-blue-dark);" id="streak-days-count">0</span>
+              <p style="font-size:0.86rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-secondary);">Days Clean / Reduced</p>
+            </div>
+
+            <div style="display:flex; justify-content:center; gap:10px; margin-top:16px;">
+              <button class="btn-primary" onclick="incrementStreak()">+ Log Today Clean</button>
+              <button class="btn-secondary" onclick="resetStreak()">Reset Counter</button>
+            </div>
+          </div>
+
+          <!-- Peer Pressure Refusal Assistant -->
+          <div class="mood-bar-card">
+            <h3 style="font-size:1.15rem; font-weight:800;">🛡️ Refusal Scripts ("How to Say No")</h3>
+            <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:12px;">Easy excuses & confident responses when handed a vape, drink, or drug at school/parties:</p>
+
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="background:var(--bg-surface); padding:14px 16px; border-radius:var(--radius-md); border-left:4px solid var(--accent-lavender);">
+                <strong style="font-size:0.86rem; color:var(--accent-lavender-dark);">Casual Excuse:</strong>
+                <p style="font-size:0.88rem;">"Nah I'm good, got a drug test for my sport / job coming up."</p>
+              </div>
+              <div style="background:var(--bg-surface); padding:14px 16px; border-radius:var(--radius-md); border-left:4px solid var(--accent-blue);">
+                <strong style="font-size:0.86rem; color:var(--accent-blue-dark);">Direct & Chill:</strong>
+                <p style="font-size:0.88rem;">"Appreciate it, but vaping/drinking messes with my stomach/asthma."</p>
+              </div>
+              <div style="background:var(--bg-surface); padding:14px 16px; border-radius:var(--radius-md); border-left:4px solid var(--accent-yellow-dark);">
+                <strong style="font-size:0.86rem; color:var(--accent-yellow-dark);">Silly Distraction:</strong>
+                <p style="font-size:0.88rem;">"I'm driving tonight / I'm already on a sugar high from 3 energy drinks, I'm set!"</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Harm Reduction Resources -->
+        <div class="mood-bar-card" style="margin-top:24px;">
+          <h3 style="font-size:1.15rem; font-weight:800;">Free Confidential Youth Resources</h3>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:14px; margin-top:14px;">
+            <div style="background:var(--bg-surface); padding:18px; border-radius:var(--radius-md); border:1px solid var(--border-glass);">
+              <h4 style="font-size:0.98rem; font-weight:800;">SAMHSA Substance Helpline</h4>
+              <p style="font-size:0.82rem; color:var(--text-muted);">24/7 free treatment referral & guidance.</p>
+              <a href="tel:18006624357" style="color:var(--accent-blue); font-weight:800; font-size:0.88rem; text-decoration:none; display:inline-block; margin-top:8px;">📞 Call 1-800-662-4357</a>
+            </div>
+            <div style="background:var(--bg-surface); padding:18px; border-radius:var(--radius-md); border:1px solid var(--border-glass);">
+              <h4 style="font-size:0.98rem; font-weight:800;">Alateen / Al-Anon Youth</h4>
+              <p style="font-size:0.82rem; color:var(--text-muted);">Support for teens affected by parents/family drinking or drugs.</p>
+              <a href="https://al-anon.org/newcomers/teen-corner-alateen/" target="_blank" style="color:var(--accent-lavender-dark); font-weight:800; font-size:0.88rem; text-decoration:none; display:inline-block; margin-top:8px;">🔗 Visit Alateen.org</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 7: VENTING JOURNAL & GETWELL AI -->
+      <section id="tab-journal" class="tab-pane">
+        <h2 style="font-size:1.5rem; font-weight:800; margin-bottom:8px;">📓 getwell.ai Assistant & Private Journal</h2>
+        <p style="color:var(--text-secondary); margin-bottom:20px;">Safe, empathetic AI grounding assistant and private encrypted-feeling local journal.</p>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:22px;">
+          <!-- getwell.ai Companion -->
+          <div class="mood-bar-card">
+            <h3 style="font-size:1.15rem; font-weight:800;">🤖 getwell.ai Grounding Assistant</h3>
+            <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:10px;">Ask for coping strategies, grounding help, or venting support.</p>
+
+            <div class="chat-container">
+              <div class="chat-messages" id="chat-messages">
+                <div class="chat-bubble bot">
+                  👋 Hi! I'm your getwell.ai assistant. I'm here to listen, share grounding tips, and support you without any judgment. How are you holding up today?
+                </div>
+              </div>
+              <div class="chat-input-bar">
+                <input type="text" class="form-control" id="chat-input" placeholder="Type your message..." onkeypress="handleChatKeyPress(event)">
+                <button class="btn-primary" onclick="sendChatMessage()">Send</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Private Journal -->
+          <div class="mood-bar-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <h3 style="font-size:1.15rem; font-weight:800;">🔒 Private Reflective Journal</h3>
+              <button class="btn-secondary" style="padding:5px 12px; font-size:0.8rem;" onclick="saveJournalEntry()">💾 Save Entry</button>
+            </div>
+            <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:10px;">Saved only in your browser storage.</p>
+
+            <textarea class="form-control" id="journal-input" placeholder="Write your private thoughts here..." style="height:315px;"></textarea>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- CRISIS HELPLINE MODAL -->
+  <div class="modal-overlay" id="crisis-modal" onclick="closeCrisisModalOnOverlay(event)">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeCrisisModal()">✕</button>
+      <h2 style="font-size:1.45rem; font-weight:800; color:var(--accent-rose); margin-bottom:6px;">🆘 24/7 Immediate Crisis Support</h2>
+      <p style="font-size:0.9rem; color:var(--text-secondary); margin-bottom:20px;">If you or someone you know is in danger, having thoughts of self-harm or suicide, please reach out to these free, confidential 24/7 services right now:</p>
+
+      <!-- AFFIRMATIONS BY KINDERGARDENERS PROJECT (USER REQUESTED) -->
+      <div class="crisis-resource-item" style="border-left:5px solid var(--accent-yellow-dark); background:var(--bg-yellow-subtle);">
+        <div>
+          <h4 style="font-weight:800; color:var(--text-primary);">Affirmations by Kindergarteners Project</h4>
+          <p style="font-size:0.82rem; color:var(--text-secondary);">Warm, uplifting pre-recorded encouragement & positive affirmations by kids when you need a gentle smile</p>
+        </div>
+        <a href="tel:7078737862" class="crisis-call-btn" style="background:var(--accent-yellow-dark);">📞 Call 707-873-7862</a>
+      </div>
+
+      <div class="crisis-resource-item">
+        <div>
+          <h4 style="font-weight:800;">988 Suicide & Crisis Lifeline</h4>
+          <p style="font-size:0.82rem; color:var(--text-muted);">Call or text 988 anytime (US & Canada)</p>
+        </div>
+        <a href="tel:988" class="crisis-call-btn">Call / Text 988</a>
+      </div>
+
+      <div class="crisis-resource-item">
+        <div>
+          <h4 style="font-weight:800;">Crisis Text Line</h4>
+          <p style="font-size:0.82rem; color:var(--text-muted);">Text HOME to 741741 to connect with a crisis counselor</p>
+        </div>
+        <a href="sms:741741?body=HOME" class="crisis-call-btn" style="background:var(--accent-blue);">Text 741741</a>
+      </div>
+
+      <div class="crisis-resource-item">
+        <div>
+          <h4 style="font-weight:800;">The Trevor Project (LGBTQ Youth)</h4>
+          <p style="font-size:0.82rem; color:var(--text-muted);">Call 1-866-488-7386 or text START to 678-678</p>
+        </div>
+        <a href="tel:18664887386" class="crisis-call-btn" style="background:var(--accent-lavender-dark);">Call Trevor</a>
+      </div>
+
+      <div class="crisis-resource-item">
+        <div>
+          <h4 style="font-weight:800;">SAMHSA National Helpline</h4>
+          <p style="font-size:0.82rem; color:var(--text-muted);">1-800-662-4357 for substance & mental health support</p>
+        </div>
+        <a href="tel:18006624357" class="crisis-call-btn" style="background:var(--accent-teal);">Call SAMHSA</a>
+      </div>
+
+      <p style="font-size:0.78rem; color:var(--text-muted); text-align:center; margin-top:18px; font-weight:600;">Remember: You are valuable, and help is always available.</p>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="js/audio.js"></script>
+  <script src="js/modules/anxiety.js"></script>
+  <script src="js/modules/depression.js"></script>
+  <script src="js/modules/selfharm.js"></script>
+  <script src="js/modules/parental.js"></script>
+  <script src="js/modules/substance.js"></script>
+  <script src="js/modules/crisis.js"></script>
+  <script src="js/modules/journal.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
