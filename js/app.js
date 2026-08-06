@@ -10,12 +10,16 @@ document.addEventListener('DOMContentLoaded', () => {
   initScribbleCanvas();
   if (typeof initSnakeGame === 'function') initSnakeGame();
   loadSafetyPlan();
-  loadStreak();
   loadJournalEntry();
   renderMoodChart();
-  updateParentScript();
   updateUrgeTimerDisplay();
+  if (typeof startWaveAnimation === 'function') startWaveAnimation();
   if (typeof initChatAssistant === 'function') initChatAssistant();
+  if (typeof initReminders === 'function') initReminders();
+  if (typeof initPet === 'function') initPet();
+  if (typeof initTimeCapsule === 'function') initTimeCapsule();
+  if (typeof initSafeSpace === 'function') initSafeSpace();
+  if (typeof renderMoodInsights === 'function') renderMoodInsights();
 
   // Close theme picker on outside click
   document.addEventListener('click', (e) => {
@@ -63,6 +67,15 @@ function switchTab(tabId) {
   if (tabId === 'depression') {
     setTimeout(renderMoodChart, 100);
   }
+  if (tabId === 'dashboard' && typeof renderMoodInsights === 'function') {
+    setTimeout(renderMoodInsights, 100);
+  }
+  if (tabId === 'pet' && typeof initPet === 'function') {
+    setTimeout(initPet, 50);
+  }
+  if (tabId === 'capsule' && typeof renderSavedCapsules === 'function') {
+    setTimeout(renderSavedCapsules, 50);
+  }
 }
 
 function selectMood(moodKey, label) {
@@ -77,6 +90,8 @@ function selectMood(moodKey, label) {
   const today = new Date().toISOString().split('T')[0];
   localStorage.setItem(`haven_mood_${today}`, moodKey);
   if (typeof renderMoodChart === 'function') renderMoodChart();
+  if (typeof renderMoodInsights === 'function') renderMoodInsights();
+  if (typeof waterPlant === 'function') waterPlant('mood', true);
 }
 
 function submitCustomMood() {
@@ -94,6 +109,8 @@ function submitCustomMood() {
   const btns = document.querySelectorAll('.mood-btn');
   btns.forEach(btn => btn.classList.remove('selected'));
   if (typeof renderMoodChart === 'function') renderMoodChart();
+  if (typeof renderMoodInsights === 'function') renderMoodInsights();
+  if (typeof waterPlant === 'function') waterPlant('mood', true);
 }
 
 function handleCustomMoodKey(e) {

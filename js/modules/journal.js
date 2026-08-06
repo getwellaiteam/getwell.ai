@@ -43,34 +43,34 @@ const botResponses = [
     ],
     chips: [{ label: '🏆 Athlete Affirmations', tab: 'depression' }]
   },
-  // Self harm / suicide - HIGHEST priority, kept serious and consistent
+  // Self harm / suicide — HIGHEST priority, kept serious and consistent
   {
     category: 'crisis',
     keywords: ['hurt myself', 'self harm', 'self-harm', 'cutting', 'cut myself', 'urge', 'kill myself', 'kms', 'suicide', 'suicidal', 'end it', 'not worth living', 'want to die'],
     replies: [
-      "I'm really glad you told me. Your safety matters more than anything right now. Please tap the red 🆘 24/7 Crisis Help button and call/text 988 — real people, no judgment, free. The Self-Harm Safety tab has a 15-min 'Ride the Wave' urge timer that can help you get through the peak.",
-      "Thank you for saying that out loud — that takes real courage. Please reach out right now to 988 (call or text) or tap 🆘 Crisis Help above. You deserve support from a real person tonight, and the urge timer in Self-Harm Safety can help you get through this next stretch of time."
+      "I'm really glad you told me. Your safety matters more than anything right now. Please tap the red 🆘 24/7 Crisis Help button and call/text 988 — real people, no judgment, free. The Self-Harm Safety tab has an interactive 'Ride the Wave' urge visualizer that can help you get through the peak.",
+      "Thank you for saying that out loud — that takes real courage. Please reach out right now to 988 (call or text) or tap 🆘 Crisis Help above. You deserve support from a real person tonight, and the wave visualizer in Self-Harm Safety can help you get through this next stretch of time."
     ],
     chips: [{ label: '🆘 Crisis Help', action: 'openCrisisModal()' }, { label: '🛡️ Ride the Wave', tab: 'selfharm' }]
   },
-  // Family
+  // Family — moved from dedicated tab into chatbot
   {
     category: 'family',
-    keywords: ['parents', 'family', 'mom', 'dad', 'mother', 'father', 'strict', 'controlling', 'yelling', 'arguing', 'fight with', 'kicked out', 'grounded'],
+    keywords: ['parents', 'family', 'mom', 'dad', 'mother', 'father', 'strict', 'controlling', 'yelling', 'arguing', 'fight with', 'kicked out', 'grounded', 'household', 'chores'],
     replies: [
-      "Family pressure is one of the heaviest things — it's the people who are supposed to be safe. There are conversation scripts built for this, and the Venting Vault lets you write it out and burn it. You're allowed to set boundaries with people you love.",
-      "That sounds exhausting to carry at home. You can love your family and still need space from them — that's not a contradiction. Want a script for how to bring this up calmly?"
+      "Family pressure is one of the heaviest things — it's the people who are supposed to be safe. You're allowed to love them AND need space from them. Try this script for a hard conversation: \"I know you want the best for me. I need you to hear that (X) is hurting me. Can we talk about (Y) without it becoming a fight?\"",
+      "That sounds exhausting to carry at home. If you're worried about grades, remember: colleges care about growth, not perfection, and one bad quarter isn't a life sentence. If it's about privacy or independence — you're not being ungrateful, you're growing up.",
+      "For strict parents: pick ONE thing to advocate for at a time, not everything at once. Bring one concrete ask (\"can I stay out until 10 on Fridays\") not a global argument (\"you never let me do anything\"). Bring it calm, at a calm moment, not mid-fight."
     ],
-    chips: [{ label: '💬 Conversation Scripts', tab: 'parental' }]
+    chips: [{ label: '⏳ Time Capsule', tab: 'capsule' }]
   },
   {
     category: 'sibling',
     keywords: ['sibling', 'brother', 'sister', 'babysit', 'take care of', 'responsible for'],
     replies: [
       "Being a built-in caretaker at your age is a lot, and it's not fair. You're allowed to feel resentment AND love them at the same time. Take breaks when you can.",
-      "Carrying that much responsibility for siblings at your age is genuinely a lot of unpaid labor. It's okay to feel tired of it — that doesn't make you a bad sibling."
-    ],
-    chips: [{ label: '💬 Family Scripts', tab: 'parental' }]
+      "Carrying that much responsibility for siblings at your age is genuinely a lot of unpaid labor. It's okay to feel tired of it — that doesn't make you a bad sibling. If you can, tell a parent one honest thing: \"I need one afternoon a week that's just mine.\""
+    ]
   },
   // School / grades
   {
@@ -148,14 +148,16 @@ const botResponses = [
     ],
     chips: [{ label: '🆘 Crisis & Support Lines', action: 'openCrisisModal()' }]
   },
-  // Substance
+  // Substance — moved from dedicated tab into chatbot
   {
     category: 'substance',
-    keywords: ['vape', 'vaping', 'nicotine', 'juul', 'weed', 'marijuana', 'edible', 'drunk', 'drink', 'alcohol', 'shots', 'pills', 'xan', 'addicted', 'addiction', 'quit', 'cravings'],
+    keywords: ['vape', 'vaping', 'nicotine', 'juul', 'weed', 'marijuana', 'edible', 'drunk', 'drink', 'alcohol', 'shots', 'pills', 'xan', 'addicted', 'addiction', 'quit', 'cravings', 'smoke', 'smoking'],
     replies: [
-      "Zero judgment. Substance stuff is really common at your age and it doesn't make you a bad person. There's a streak tracker + refusal scripts for when someone hands you something at a party. SAMHSA (1-800-662-4357) is free, confidential, 24/7."
+      "Zero judgment. Substance stuff is really common at your age and doesn't make you a bad person. If you're trying to cut back, cravings peak in about 15-20 minutes and then fade — the Ride the Wave visualizer in Self-Harm Safety works for cravings too. SAMHSA (1-800-662-4357) is free, confidential, 24/7.",
+      "Refusal scripts for when someone hands you a vape/drink/pill: (1) casual — \"nah I'm good, drug test coming up.\" (2) direct — \"my stomach can't handle it.\" (3) deflect — \"I'm already on my third energy drink.\" You don't owe anyone a real reason.",
+      "If it's a family member's drinking/drugs that's affecting you, Alateen is free and specifically for teens in that situation (al-anon.org/teen). You're not alone in it."
     ],
-    chips: [{ label: '🌱 Streak Tracker', tab: 'substance' }]
+    chips: [{ label: '🛡️ Ride the Wave', tab: 'selfharm' }, { label: '🆘 Crisis Help', action: 'openCrisisModal()' }]
   },
   // Body / eating
   {
@@ -180,7 +182,7 @@ const botResponses = [
       "Overwhelm usually means you're carrying too many mental tabs open. Write down every single thing on your mind, then circle ONE thing you can do in 15 min. Do that. Ignore the rest for tonight.",
       "That drowning feeling is a signal you're carrying too much at once, not that you're failing. Let's shrink it down to one single next step."
     ],
-    chips: [{ label: '🌬️ Grounding Tools', tab: 'anxiety' }]
+    chips: [{ label: '🌬️ Grounding Tools', tab: 'anxiety' }, { label: '⏳ Letter from Future You', tab: 'capsule' }]
   },
   {
     category: 'procrastination',
@@ -193,7 +195,7 @@ const botResponses = [
     category: 'angry',
     keywords: ['angry', 'anger', 'mad', 'furious', 'rage', 'want to scream', 'hate everyone'],
     replies: [
-      "Anger is valid — it usually means something you care about got hurt. Get it out of your body first: run, punch a pillow, use the scribble canvas, or write in the Venting Vault. Cool down THEN act."
+      "Anger is valid — it usually means something you care about got hurt. Get it out of your body first: run, punch a pillow, use the scribble canvas, or write in the private journal. Cool down THEN act."
     ],
     chips: [{ label: '🎨 Scribble Canvas', tab: 'selfharm' }]
   },
@@ -211,7 +213,8 @@ const botResponses = [
     keywords: ['future', 'what am i doing', 'lost', "don't know what i want", 'career', 'major', 'purpose'],
     replies: [
       "Not knowing what you want at 15-18 is the ACTUAL normal — the confident ones are usually faking it. Pay attention to what you're curious about, not what impresses people."
-    ]
+    ],
+    chips: [{ label: '⏳ Time Capsule', tab: 'capsule' }]
   },
   // General help / how do I use this
   {
@@ -253,25 +256,72 @@ const fallbackReplies = [
   "That's real. I'm here. Do you want practical steps or just to be heard?"
 ];
 
-/* ---------- Conversation state (name capture + light memory) ---------- */
-let chatUserName = null;
-let chatAwaitingName = false;
+/* ---------- Intro topic screen ---------- */
+const introTopics = [
+  { key: 'anxiety',    icon: '🌬️', label: 'Anxiety or panic',      opener: "Anxiety is hard. What's making your chest tight right now?" },
+  { key: 'depression', icon: '☀️', label: 'Feeling low or empty',   opener: "Heavy days are real. What's feeling flat or too heavy today?" },
+  { key: 'family',     icon: '🏠', label: 'Family or parents',       opener: "Family stuff is heavy because they're supposed to be safe. What's going on at home?" },
+  { key: 'school',     icon: '📚', label: 'School, grades, college', opener: "School pressure is a lot. What's the assignment or class stressing you out?" },
+  { key: 'friends',    icon: '👥', label: 'Friends or relationships',opener: "Social stuff at school is brutal. What went down?" },
+  { key: 'substance',  icon: '🌱', label: 'Vaping, weed, alcohol, or cravings', opener: "Zero judgment here. Are you trying to cut back, or is someone in your life using?" },
+  { key: 'selfharm',   icon: '🛡️', label: 'Self-harm urges or safety',opener: "Thank you for coming here. You're safe in this moment. Can you tell me what's going on?" },
+  { key: 'stressed',   icon: '😩', label: 'Overwhelmed by everything',opener: "When everything piles up at once, it drowns out any next step. What's on your mental list right now?" },
+  { key: 'other',      icon: '💬', label: 'Something else / not sure',opener: "I'm here. Take your time. What's on your mind?" }
+];
+
+let chatIntroShown = false;
 let chatLastCategory = null;
 let chatLastReplyIdx = {};
 
 function initChatAssistant() {
-  chatUserName = localStorage.getItem('haven_user_name') || null;
   const messages = document.getElementById('chat-messages');
   if (!messages) return;
 
   messages.innerHTML = '';
-  if (chatUserName) {
-    chatAwaitingName = false;
-    appendBotBubble(`👋 Hey ${escapeHtml(chatUserName)}, welcome back. I'm here to listen, share coping tools, and support you without judgment. What's going on today?`);
-  } else {
-    chatAwaitingName = true;
-    appendBotBubble("👋 Hi! I'm your getwell.ai assistant — here to listen and help you find tools that actually fit what you're dealing with, no judgment. First: what should I call you? (First name or a nickname is totally fine.)");
-  }
+  chatIntroShown = false;
+  chatLastCategory = null;
+  chatLastReplyIdx = {};
+
+  appendBotBubble("👋 Hey — I'm your getwell.ai assistant. I'm here to listen without judgment. What would you like to talk about?");
+  showTopicChooser();
+}
+
+function showTopicChooser() {
+  const messages = document.getElementById('chat-messages');
+  if (!messages) return;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'chat-topic-grid';
+  wrap.id = 'chat-topic-grid';
+
+  introTopics.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'chat-topic-btn';
+    btn.innerHTML = `<span class="chat-topic-icon">${t.icon}</span><span class="chat-topic-label">${escapeHtml(t.label)}</span>`;
+    btn.onclick = () => pickIntroTopic(t.key);
+    wrap.appendChild(btn);
+  });
+
+  messages.appendChild(wrap);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function pickIntroTopic(key) {
+  const grid = document.getElementById('chat-topic-grid');
+  if (grid) grid.remove();
+
+  chatIntroShown = true;
+
+  const topic = introTopics.find(t => t.key === key) || introTopics[introTopics.length - 1];
+  appendUserBubble(topic.label);
+
+  setTimeout(() => {
+    // For known categories, use the matching bot response's chips
+    const matching = botResponses.find(r => r.category === key);
+    const chips = matching ? matching.chips : null;
+    appendBotBubble(escapeHtml(topic.opener), chips);
+    chatLastCategory = key;
+  }, 350);
 }
 
 function handleChatKeyPress(e) {
@@ -289,66 +339,23 @@ function sendChatMessage() {
   appendUserBubble(userText);
   input.value = '';
 
-  setTimeout(() => {
-    if (chatAwaitingName) {
-      handleNameCapture(userText);
-      return;
-    }
-    // Allow an explicit rename any time — kept to unambiguous phrases only
-    // ("I'm anxious" / "I'm done" must NOT be mistaken for a name introduction).
-    const renameMatch = userText.match(/\b(?:call me|my name(?:'s| is)|name's)\s+([a-zA-Z][a-zA-Z'-]{0,19})\b/i);
-    if (renameMatch) {
-      setChatUserName(renameMatch[1]);
-      appendBotBubble(`Got it, ${escapeHtml(chatUserName)} — good to meet you. What's going on?`);
-      return;
-    }
+  // If the user typed before choosing a topic, dismiss the topic grid
+  if (!chatIntroShown) {
+    const grid = document.getElementById('chat-topic-grid');
+    if (grid) grid.remove();
+    chatIntroShown = true;
+  }
 
+  setTimeout(() => {
     const { html, chips, category } = getBotReply(userText);
     appendBotBubble(html, chips);
     chatLastCategory = category;
   }, 500);
 }
 
-const NAME_CAPTURE_STOPWORDS = ['i', 'im', "i'm", 'hey', 'hi', 'hello', 'yo', 'sup', 'well', 'so', 'idk', 'uh', 'um', 'ok', 'okay', 'no', 'not', 'nothing', 'nvm', 'skip'];
-
-function handleNameCapture(text) {
-  const trimmed = text.trim();
-  const words = trimmed.split(/\s+/);
-  const firstTokenClean = words[0].replace(/[^a-zA-Z']/g, '').toLowerCase();
-  const looksLikeName = words.length <= 3 && !/[.?!]/.test(trimmed) && !NAME_CAPTURE_STOPWORDS.includes(firstTokenClean);
-
-  chatAwaitingName = false;
-
-  if (!looksLikeName) {
-    // They skipped the name or just started venting — that's fine, respond to
-    // what they actually said instead of misreading it as a name.
-    appendBotBubble("No worries, you don't need to share a name — I'm here either way.");
-    const { html, chips, category } = getBotReply(trimmed);
-    appendBotBubble(html, chips);
-    chatLastCategory = category;
-    return;
-  }
-
-  const clean = trimmed.replace(/[^a-zA-Z' -]/g, '').trim().split(/\s+/)[0] || 'friend';
-  setChatUserName(clean);
-  appendBotBubble(
-    `Nice to meet you, ${escapeHtml(chatUserName)}! I'll remember that. You can tell me anything — school stress, family stuff, anxiety, feeling low, whatever's real right now.`,
-    [
-      { label: '🌬️ Anxiety Tools', tab: 'anxiety' },
-      { label: '☀️ Depression Tools', tab: 'depression' },
-      { label: '🛡️ Self-Harm Safety', tab: 'selfharm' }
-    ]
-  );
-}
-
-function setChatUserName(name) {
-  const trimmed = (name || '').trim().slice(0, 20) || 'friend';
-  chatUserName = trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
-  localStorage.setItem('haven_user_name', chatUserName);
-}
-
 function appendUserBubble(text) {
   const messages = document.getElementById('chat-messages');
+  if (!messages) return;
   const bubble = document.createElement('div');
   bubble.className = 'chat-bubble user';
   bubble.textContent = text;
@@ -391,7 +398,6 @@ function getBotReply(userText) {
   const textLower = userText.toLowerCase();
 
   // Score-based match: multi-word keywords use substring; single words match on word boundaries
-  // so "boyfriend" doesn't trigger "friend" and "friends" doesn't trigger via "friend".
   let bestScore = 0;
   let bestItem = null;
   for (const item of botResponses) {
@@ -421,7 +427,6 @@ function getBotReply(userText) {
     chips = bestItem.chips;
     const idxKey = category;
     let idx = Math.floor(Math.random() * bestItem.replies.length);
-    // Avoid repeating the exact same variant twice in a row on the same topic
     if (bestItem.replies.length > 1 && chatLastReplyIdx[idxKey] === idx) {
       idx = (idx + 1) % bestItem.replies.length;
     }
@@ -430,11 +435,6 @@ function getBotReply(userText) {
   } else {
     category = 'fallback';
     replyText = fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
-  }
-
-  // Occasionally personalize with the user's name (skip for crisis — keep that message clean/serious)
-  if (chatUserName && category !== 'crisis' && Math.random() < 0.4) {
-    replyText = `${chatUserName}, ${replyText.charAt(0).toLowerCase()}${replyText.slice(1)}`;
   }
 
   return { html: escapeHtml(replyText), chips, category };

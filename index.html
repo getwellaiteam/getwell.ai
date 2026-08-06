@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>getwell.ai | High School Mental Health & Wellness</title>
-  <meta name="description" content="A warm, peaceful mental health sanctuary for high schoolers dealing with anxiety, depression, self-harm, family pressure, and substance support.">
+  <meta name="description" content="A warm, peaceful mental health sanctuary for high schoolers — anxiety, depression, self-harm support, time capsule, virtual pet, and your own customizable safe space.">
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
 </head>
@@ -84,6 +84,7 @@
       <div class="audio-controls">
         <button class="btn-audio" data-sound="rain" onclick="toggleAudioSound('rain')">🌧️ Soft Rain</button>
         <button class="btn-audio" data-sound="waves" onclick="toggleAudioSound('waves')">🌊 Ocean Waves</button>
+        <button class="btn-audio" data-sound="whitenoise" onclick="toggleAudioSound('whitenoise')">📻 White Noise</button>
         <button class="btn-audio" data-sound="binaural" onclick="toggleAudioSound('binaural')">🧠 Focus 432Hz</button>
         <button class="btn-audio" data-sound="piano" onclick="toggleAudioSound('piano')">🎹 Warm Hum</button>
         <button class="btn-audio btn-spotify" onclick="openSpotifyModal()">🎵 My Song (Spotify)</button>
@@ -136,12 +137,18 @@
         <span class="nav-icon">📓</span> Venting & AI Assistant
       </a>
 
-      <div class="nav-section-title" style="margin-top:14px;">Life & Growth</div>
-      <a class="nav-item" data-tab="parental" onclick="switchTab('parental')">
-        <span class="nav-icon">🏠</span> Family & Pressure
+      <div class="nav-section-title" style="margin-top:14px;">Grow & Reflect</div>
+      <a class="nav-item" data-tab="safespace" onclick="switchTab('safespace')">
+        <span class="nav-icon">🏡</span> My Safe Space
       </a>
-      <a class="nav-item" data-tab="substance" onclick="switchTab('substance')">
-        <span class="nav-icon">🌱</span> Substance Support
+      <a class="nav-item" data-tab="pet" onclick="switchTab('pet')">
+        <span class="nav-icon">🌱</span> Virtual Plant
+      </a>
+      <a class="nav-item" data-tab="capsule" onclick="switchTab('capsule')">
+        <span class="nav-icon">⏳</span> Time Capsule
+      </a>
+      <a class="nav-item" data-tab="reminders" onclick="switchTab('reminders')">
+        <span class="nav-icon">🔔</span> Reminders
       </a>
     </nav>
 
@@ -225,6 +232,20 @@
           <div id="mood-feedback" style="margin-top:14px; font-size:0.9rem; font-weight:700; color:var(--accent-lavender-dark);"></div>
         </div>
 
+        <!-- AI MOOD INSIGHTS -->
+        <div class="mood-bar-card mood-insight-card" style="margin-top:22px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+            <div>
+              <h3 style="font-size:1.15rem; font-weight:800;">🤖 AI Mood Insights</h3>
+              <p style="font-size:0.85rem; color:var(--text-muted);">Patterns we've noticed in your recent check-ins.</p>
+            </div>
+            <button class="btn-secondary" style="padding:6px 14px; font-size:0.8rem;" onclick="refreshMoodInsights()">🔄 Refresh</button>
+          </div>
+          <div id="mood-insights-list" style="margin-top:14px;">
+            <!-- populated by moodSummary.js -->
+          </div>
+        </div>
+
         <!-- FEATURE TILES -->
         <h3 style="font-size:1.15rem; font-weight:800; margin-top:24px;">Explore Sanctuary Toolkits</h3>
         <div class="cards-grid" style="margin-top:14px;">
@@ -250,36 +271,54 @@
             <div>
               <div class="card-header-icon card-selfharm">🛡️</div>
               <h4 class="card-title">Self-Harm Safety</h4>
-              <p class="card-desc">Urge surfing 15-min timer, safe sensory outlets (scribble canvas, ice, sound), and interactive safety plan.</p>
+              <p class="card-desc">Interactive urge-surfing wave, safe sensory outlets, and personal safety plan.</p>
             </div>
             <div class="card-action">Safety Toolkit &rarr;</div>
           </div>
 
-          <div class="feature-card" onclick="switchTab('parental')">
+          <div class="feature-card" onclick="switchTab('capsule')">
             <div>
-              <div class="card-header-icon card-parental">🏠</div>
-              <h4 class="card-title">Family & Parental Pressure</h4>
-              <p class="card-desc">Boundary setting scripts, academic pressure reality check, and the Venting Vault burner.</p>
+              <div class="card-header-icon" style="background:var(--bg-yellow-subtle); color:var(--accent-yellow-dark);">⏳</div>
+              <h4 class="card-title">Time Capsule from Future You</h4>
+              <p class="card-desc">Type what you're stressed about — receive a letter from your future self about how it works out.</p>
             </div>
-            <div class="card-action">Explore Scripts &rarr;</div>
+            <div class="card-action">Open Time Capsule &rarr;</div>
           </div>
 
-          <div class="feature-card" onclick="switchTab('substance')">
+          <div class="feature-card" onclick="switchTab('pet')">
             <div>
               <div class="card-header-icon card-substance">🌱</div>
-              <h4 class="card-title">Substance Usage Support</h4>
-              <p class="card-desc">Non-judgmental craving tracker, peer pressure refusal scripts, and harm-reduction guide.</p>
+              <h4 class="card-title">My Virtual Plant</h4>
+              <p class="card-desc">A plant that grows every time you check in, breathe, log a win, or drink water. Watch it bloom.</p>
             </div>
-            <div class="card-action">Habit Tracker &rarr;</div>
+            <div class="card-action">Visit Your Plant &rarr;</div>
+          </div>
+
+          <div class="feature-card" onclick="switchTab('safespace')">
+            <div>
+              <div class="card-header-icon card-parental">🏡</div>
+              <h4 class="card-title">My Safe Space</h4>
+              <p class="card-desc">Customize your own room: music, photos, affirmations, coping tools, and trusted contacts. All saved.</p>
+            </div>
+            <div class="card-action">Build Your Room &rarr;</div>
+          </div>
+
+          <div class="feature-card" onclick="switchTab('reminders')">
+            <div>
+              <div class="card-header-icon" style="background:var(--bg-blue-subtle); color:var(--accent-blue-dark);">🔔</div>
+              <h4 class="card-title">Wellness Reminders</h4>
+              <p class="card-desc">Gentle water, meditation, breathing, and check-in nudges. Fully customizable.</p>
+            </div>
+            <div class="card-action">Set Reminders &rarr;</div>
           </div>
 
           <div class="feature-card" onclick="switchTab('journal')">
             <div>
               <div class="card-header-icon card-parental" style="background:var(--bg-lavender-subtle);">📓</div>
               <h4 class="card-title">getwell.ai Assistant</h4>
-              <p class="card-desc">Talk to your empathetic AI Grounding Assistant or write in your private encrypted-feeling journal.</p>
+              <p class="card-desc">Talk to your empathetic AI Grounding Assistant about anything — anxiety, family, substance, school. Includes private journal.</p>
             </div>
-            <div class="card-action">Open Venting Space &rarr;</div>
+            <div class="card-action">Open Chat &rarr;</div>
           </div>
         </div>
       </section>
@@ -453,17 +492,40 @@
 
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:22px;">
           
-          <!-- Ride the Wave 15-Min Timer -->
-          <div class="mood-bar-card" style="text-align:center;">
-            <h3 style="font-size:1.15rem; font-weight:800;">🌊 Ride the Wave (15-Minute Urge Timer)</h3>
-            <p style="font-size:0.82rem; color:var(--text-muted);">Urges peak like ocean waves and pass within 15-20 minutes. Focus on staying safe just for this timer.</p>
+          <!-- Ride the Wave — Interactive -->
+          <div class="mood-bar-card wave-card" style="text-align:center;">
+            <h3 style="font-size:1.15rem; font-weight:800;">🌊 Ride the Wave (Interactive)</h3>
+            <p style="font-size:0.82rem; color:var(--text-muted);">Urges peak like ocean waves and pass within 15-20 minutes. Tap the wave to help it move. Breathe with the surface.</p>
+
+            <div class="wave-stage" id="wave-stage" onclick="tapWave(event)">
+              <svg class="wave-svg" viewBox="0 0 400 220" preserveAspectRatio="none" aria-hidden="true">
+                <defs>
+                  <linearGradient id="waveGradA" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#93c5fd" stop-opacity="0.85"/>
+                    <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.55"/>
+                  </linearGradient>
+                  <linearGradient id="waveGradB" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.7"/>
+                    <stop offset="100%" stop-color="#7c3aed" stop-opacity="0.4"/>
+                  </linearGradient>
+                </defs>
+                <path id="wave-path-back" fill="url(#waveGradB)" d="M0,140 Q100,100 200,140 T400,140 L400,220 L0,220 Z"></path>
+                <path id="wave-path-front" fill="url(#waveGradA)" d="M0,160 Q100,120 200,160 T400,160 L400,220 L0,220 Z"></path>
+              </svg>
+              <div class="wave-tap-hint" id="wave-tap-hint">👆 Tap the water</div>
+              <div class="wave-breath-orb" id="wave-breath-orb"></div>
+              <div class="wave-affirm" id="wave-affirm">You are safe in this moment.</div>
+            </div>
 
             <div class="timer-display" id="urge-timer-display">15:00</div>
+            <div class="wave-progress-bar"><div class="wave-progress-fill" id="wave-progress-fill"></div></div>
 
-            <div style="display:flex; justify-content:center; gap:10px; margin-top:14px;">
+            <div style="display:flex; justify-content:center; gap:10px; margin-top:14px; flex-wrap:wrap;">
               <button class="btn-primary" id="timer-start-btn" onclick="toggleUrgeTimer()">▶️ Ride the Wave</button>
               <button class="btn-secondary" onclick="resetUrgeTimer()">⏹️ Reset</button>
             </div>
+
+            <p style="font-size:0.75rem; color:var(--text-muted); margin-top:12px;">Taps: <span id="wave-tap-count">0</span> · Every tap makes the wave gentler.</p>
           </div>
 
           <!-- Safe Sensory Outlets Canvas & Simulator -->
@@ -538,103 +600,261 @@
         </div>
       </section>
 
-      <!-- TAB 5: PARENTAL & FAMILY PRESSURE -->
-      <section id="tab-parental" class="tab-pane">
-        <h2 style="font-size:1.5rem; font-weight:800; margin-bottom:8px;">🏠 Family & Parental Pressure</h2>
-        <p style="color:var(--text-secondary); margin-bottom:20px;">Navigating strict parents, high expectations, sibling care burdens, and family stress.</p>
+      <!-- TAB: TIME CAPSULE -->
+      <section id="tab-capsule" class="tab-pane">
+        <h2 style="font-size:1.5rem; font-weight:800; margin-bottom:8px;">⏳ Time Capsule from Future You</h2>
+        <p style="color:var(--text-secondary); margin-bottom:20px;">Write what's stressing you out right now — receive a warm, honest letter from the you who already made it through this.</p>
 
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:22px;">
-          <!-- Script Builder -->
-          <div class="mood-bar-card">
-            <h3 style="font-size:1.15rem; font-weight:800;">💬 Hard Conversation Script Generator</h3>
-            <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:12px;">Choose a scenario to get assertive, respectful scripts you can use with parents:</p>
+        <div class="mood-bar-card capsule-input-card">
+          <h3 style="font-size:1.15rem; font-weight:800;">📝 What's weighing on you?</h3>
+          <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:12px;">Describe the situation in your own words. The more real you are, the more real the letter feels.</p>
 
-            <div class="form-group">
-              <select class="form-control" id="script-scenario-select" onchange="updateParentScript()">
-                <option value="academic">"My grades aren't perfect and I'm burning out."</option>
-                <option value="privacy">"I need privacy and personal space."</option>
-                <option value="parenting">"I am carrying too much responsibility for my siblings."</option>
-                <option value="future">"I don't want to pursue the exact career path you chose for me."</option>
-              </select>
-            </div>
+          <textarea class="form-control" id="capsule-worry-input" placeholder="e.g., I'm terrified I'll fail my chem final and my parents will lose it..." style="height:100px;"></textarea>
 
-            <div style="background:var(--bg-surface); border:1.5px solid var(--border-glass); border-radius:var(--radius-md); padding:18px; min-height:140px; margin-top:14px;" id="script-result-box">
-              <!-- Script populates here -->
-            </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; align-items:center;">
+            <label style="font-size:0.85rem; font-weight:700; color:var(--text-secondary);">Look ahead:</label>
+            <select class="form-control" id="capsule-timeframe" style="max-width:180px;">
+              <option value="1w">1 week from now</option>
+              <option value="1m">1 month from now</option>
+              <option value="6m" selected>6 months from now</option>
+              <option value="1y">1 year from now</option>
+              <option value="5y">5 years from now</option>
+            </select>
+            <button class="btn-primary" onclick="generateTimeCapsule()">✨ Open the Letter</button>
           </div>
+        </div>
 
-          <!-- Venting Vault (Burner) -->
-          <div class="mood-bar-card" style="text-align:center;">
-            <h3 style="font-size:1.15rem; font-weight:800;">🔥 The Venting Vault (Thought Burner)</h3>
-            <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:12px;">Write down frustrating thoughts or feelings about family pressure, then shred & burn them away forever.</p>
+        <div class="mood-bar-card capsule-letter-card" id="capsule-letter-card" style="margin-top:22px; display:none;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <h3 style="font-size:1.15rem; font-weight:800;">💌 A letter from your future self</h3>
+            <button class="btn-secondary" style="padding:6px 14px; font-size:0.8rem;" onclick="saveTimeCapsule()">💾 Save Letter</button>
+          </div>
+          <div class="capsule-letter" id="capsule-letter-body"></div>
+        </div>
 
-            <textarea class="form-control" id="vent-input" placeholder="Vent whatever is on your mind..." style="height:120px;"></textarea>
-
-            <button class="btn-primary" style="margin-top:14px; background:linear-gradient(135deg, var(--accent-rose), #e11d48);" onclick="burnThought()">🔥 Shred & Burn Thought</button>
+        <div class="mood-bar-card" style="margin-top:22px;">
+          <h3 style="font-size:1.15rem; font-weight:800;">📚 My Saved Letters</h3>
+          <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:14px;">Come back to these on hard days.</p>
+          <div id="capsule-saved-list">
+            <!-- populated -->
           </div>
         </div>
       </section>
 
-      <!-- TAB 6: SUBSTANCE & DRUG SUPPORT -->
-      <section id="tab-substance" class="tab-pane">
-        <h2 style="font-size:1.5rem; font-weight:800; margin-bottom:8px;">🌱 Substance & Habit Support</h2>
-        <p style="color:var(--text-secondary); margin-bottom:20px;">Zero-judgment support for vaping, alcohol, weed, or pill usage, plus peer pressure refusal skills.</p>
+      <!-- TAB: VIRTUAL PLANT -->
+      <section id="tab-pet" class="tab-pane">
+        <h2 style="font-size:1.5rem; font-weight:800; margin-bottom:8px;">🌱 My Virtual Plant</h2>
+        <p style="color:var(--text-secondary); margin-bottom:20px;">Every healthy habit gives your plant a little water. Watch it grow with you.</p>
 
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:22px;">
-          <!-- Clean Streak & Goal Tracker -->
-          <div class="mood-bar-card">
-            <h3 style="font-size:1.15rem; font-weight:800;">Clean & Clear Streak Tracker</h3>
-            <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:14px;">Track your progress toward reducing or stopping substance usage.</p>
-
-            <div style="text-align:center; background:var(--bg-blue-subtle); padding:22px; border-radius:var(--radius-lg); border:1px solid var(--border-glass);">
-              <span style="font-size:3.2rem; font-weight:800; color:var(--accent-blue-dark);" id="streak-days-count">0</span>
-              <p style="font-size:0.86rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-secondary);">Days Clean / Reduced</p>
+        <div style="display:grid; grid-template-columns: 1fr 320px; gap:22px; align-items:start;">
+          <div class="mood-bar-card pet-stage-card">
+            <div class="pet-scene">
+              <div class="pet-sky"></div>
+              <div class="pet-ground"></div>
+              <div class="pet-plant" id="pet-plant">
+                <!-- SVG plant, populated by pet.js -->
+              </div>
+              <div class="pet-name-tag" id="pet-name-tag">🌱 Sprout</div>
             </div>
 
-            <div style="display:flex; justify-content:center; gap:10px; margin-top:16px;">
-              <button class="btn-primary" onclick="incrementStreak()">+ Log Today Clean</button>
-              <button class="btn-secondary" onclick="resetStreak()">Reset Counter</button>
+            <div class="pet-stats">
+              <div class="pet-stat">
+                <span class="pet-stat-label">Growth</span>
+                <div class="pet-bar"><div class="pet-bar-fill" id="pet-growth-fill"></div></div>
+                <span class="pet-stat-value" id="pet-growth-text">0 / 10</span>
+              </div>
+              <div class="pet-stat">
+                <span class="pet-stat-label">Level</span>
+                <span class="pet-level" id="pet-level">🌱 Sprout</span>
+              </div>
             </div>
           </div>
 
-          <!-- Peer Pressure Refusal Assistant -->
           <div class="mood-bar-card">
-            <h3 style="font-size:1.15rem; font-weight:800;">🛡️ Refusal Scripts ("How to Say No")</h3>
-            <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:12px;">Easy excuses & confident responses when handed a vape, drink, or drug at school/parties:</p>
+            <h3 style="font-size:1.05rem; font-weight:800;">💧 Care Actions</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">Each action gives your plant water.</p>
 
-            <div style="display:flex; flex-direction:column; gap:10px;">
-              <div style="background:var(--bg-surface); padding:14px 16px; border-radius:var(--radius-md); border-left:4px solid var(--accent-lavender);">
-                <strong style="font-size:0.86rem; color:var(--accent-lavender-dark);">Casual Excuse:</strong>
-                <p style="font-size:0.88rem;">"Nah I'm good, got a drug test for my sport / job coming up."</p>
-              </div>
-              <div style="background:var(--bg-surface); padding:14px 16px; border-radius:var(--radius-md); border-left:4px solid var(--accent-blue);">
-                <strong style="font-size:0.86rem; color:var(--accent-blue-dark);">Direct & Chill:</strong>
-                <p style="font-size:0.88rem;">"Appreciate it, but vaping/drinking messes with my stomach/asthma."</p>
-              </div>
-              <div style="background:var(--bg-surface); padding:14px 16px; border-radius:var(--radius-md); border-left:4px solid var(--accent-yellow-dark);">
-                <strong style="font-size:0.86rem; color:var(--accent-yellow-dark);">Silly Distraction:</strong>
-                <p style="font-size:0.88rem;">"I'm driving tonight / I'm already on a sugar high from 3 energy drinks, I'm set!"</p>
-              </div>
+            <div class="pet-actions">
+              <button class="pet-action-btn" onclick="waterPlant('mood')">😌 Check In Mood <span class="pet-action-plus">+1</span></button>
+              <button class="pet-action-btn" onclick="waterPlant('breath')">🌬️ Take a Breath <span class="pet-action-plus">+1</span></button>
+              <button class="pet-action-btn" onclick="waterPlant('water')">💧 I Drank Water <span class="pet-action-plus">+1</span></button>
+              <button class="pet-action-btn" onclick="waterPlant('meditate')">🧘 I Meditated <span class="pet-action-plus">+2</span></button>
+              <button class="pet-action-btn" onclick="waterPlant('journal')">📓 I Journaled <span class="pet-action-plus">+2</span></button>
+            </div>
+
+            <div style="display:flex; gap:8px; margin-top:16px; flex-wrap:wrap;">
+              <input type="text" id="pet-name-input" class="form-control" placeholder="Name your plant..." style="flex:1; min-width:0;">
+              <button class="btn-secondary" onclick="renamePlant()">Rename</button>
+            </div>
+
+            <p style="font-size:0.72rem; color:var(--text-muted); margin-top:12px;">Streak: <strong id="pet-streak">0</strong> days · Plant progress is saved.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: MY SAFE SPACE -->
+      <section id="tab-safespace" class="tab-pane">
+        <h2 style="font-size:1.5rem; font-weight:800; margin-bottom:8px;">🏡 My Safe Space</h2>
+        <p style="color:var(--text-secondary); margin-bottom:20px;">Your personal virtual room. Everything you add here is saved automatically to your browser.</p>
+
+        <div class="safespace-grid">
+          <!-- Vibe / Music -->
+          <div class="mood-bar-card safespace-tile">
+            <h3 style="font-size:1.05rem; font-weight:800;">🎵 My Calming Music</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">Paste a Spotify track/playlist link — it stays here for next time.</p>
+            <input type="text" class="form-control" id="ss-music-input" placeholder="https://open.spotify.com/..." oninput="saveSafeSpace()">
+            <button class="btn-secondary" style="margin-top:10px;" onclick="renderSafeSpaceMusic()">▶️ Load Player</button>
+            <div id="ss-music-embed" style="margin-top:12px;"></div>
+          </div>
+
+          <!-- Photos gallery -->
+          <div class="mood-bar-card safespace-tile">
+            <h3 style="font-size:1.05rem; font-weight:800;">📷 My Comfort Photos</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">Pictures of people, pets, or places you love. Stored only on this device.</p>
+            <input type="file" id="ss-photo-input" accept="image/*" multiple onchange="addSafeSpacePhotos(event)" style="font-size:0.82rem;">
+            <div id="ss-photos-grid" class="ss-photos-grid"></div>
+          </div>
+
+          <!-- Affirmations -->
+          <div class="mood-bar-card safespace-tile">
+            <h3 style="font-size:1.05rem; font-weight:800;">✨ My Affirmations</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">Reminders you can read anytime.</p>
+            <div style="display:flex; gap:8px; margin-bottom:10px;">
+              <input type="text" class="form-control" id="ss-affirm-input" placeholder="I am doing my best, and that's enough." onkeypress="if(event.key==='Enter')addSafeSpaceAffirm()">
+              <button class="btn-secondary" onclick="addSafeSpaceAffirm()">+ Add</button>
+            </div>
+            <div id="ss-affirms-list" class="ss-list"></div>
+          </div>
+
+          <!-- Coping strategies -->
+          <div class="mood-bar-card safespace-tile">
+            <h3 style="font-size:1.05rem; font-weight:800;">🧰 My Coping Strategies</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">The stuff that actually works for you.</p>
+            <div style="display:flex; gap:8px; margin-bottom:10px;">
+              <input type="text" class="form-control" id="ss-cope-input" placeholder="Cold shower, call Maya, rewatch The Office..." onkeypress="if(event.key==='Enter')addSafeSpaceCope()">
+              <button class="btn-secondary" onclick="addSafeSpaceCope()">+ Add</button>
+            </div>
+            <div id="ss-cope-list" class="ss-list"></div>
+          </div>
+
+          <!-- Trusted contacts -->
+          <div class="mood-bar-card safespace-tile">
+            <h3 style="font-size:1.05rem; font-weight:800;">📞 My Trusted Contacts</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">Quick tap to text or call.</p>
+            <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+              <input type="text" class="form-control" id="ss-contact-name" placeholder="Name" style="flex:1; min-width:120px;">
+              <input type="text" class="form-control" id="ss-contact-num" placeholder="Phone or note" style="flex:1; min-width:120px;">
+              <button class="btn-secondary" onclick="addSafeSpaceContact()">+ Add</button>
+            </div>
+            <div id="ss-contacts-list" class="ss-list"></div>
+          </div>
+
+          <!-- Quick breathing tool -->
+          <div class="mood-bar-card safespace-tile">
+            <h3 style="font-size:1.05rem; font-weight:800;">🌬️ Quick Breathing Tool</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:14px;">One tap to breathe with your safe space.</p>
+            <div class="ss-mini-breath" id="ss-mini-breath"></div>
+            <div style="display:flex; gap:8px; margin-top:14px;">
+              <button class="btn-primary" style="flex:1;" onclick="toggleMiniBreath()">Start / Stop Breath</button>
+              <button class="btn-secondary" onclick="switchTab('anxiety')">Full Toolkit</button>
             </div>
           </div>
         </div>
 
-        <!-- Harm Reduction Resources -->
-        <div class="mood-bar-card" style="margin-top:24px;">
-          <h3 style="font-size:1.15rem; font-weight:800;">Free Confidential Youth Resources</h3>
-          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:14px; margin-top:14px;">
-            <div style="background:var(--bg-surface); padding:18px; border-radius:var(--radius-md); border:1px solid var(--border-glass);">
-              <h4 style="font-size:0.98rem; font-weight:800;">SAMHSA Substance Helpline</h4>
-              <p style="font-size:0.82rem; color:var(--text-muted);">24/7 free treatment referral & guidance.</p>
-              <a href="tel:18006624357" style="color:var(--accent-blue); font-weight:800; font-size:0.88rem; text-decoration:none; display:inline-block; margin-top:8px;">📞 Call 1-800-662-4357</a>
-            </div>
-            <div style="background:var(--bg-surface); padding:18px; border-radius:var(--radius-md); border:1px solid var(--border-glass);">
-              <h4 style="font-size:0.98rem; font-weight:800;">Alateen / Al-Anon Youth</h4>
-              <p style="font-size:0.82rem; color:var(--text-muted);">Support for teens affected by parents/family drinking or drugs.</p>
-              <a href="https://al-anon.org/newcomers/teen-corner-alateen/" target="_blank" style="color:var(--accent-lavender-dark); font-weight:800; font-size:0.88rem; text-decoration:none; display:inline-block; margin-top:8px;">🔗 Visit Alateen.org</a>
-            </div>
+        <p style="text-align:center; font-size:0.78rem; color:var(--text-muted); margin-top:20px;">💾 Everything on this page auto-saves to your browser. Come back anytime.</p>
+      </section>
+
+      <!-- TAB: REMINDERS -->
+      <section id="tab-reminders" class="tab-pane">
+        <h2 style="font-size:1.5rem; font-weight:800; margin-bottom:8px;">🔔 Wellness Reminders</h2>
+        <p style="color:var(--text-secondary); margin-bottom:20px;">Gentle nudges to drink water, meditate, breathe, and check in with yourself.</p>
+
+        <div class="mood-bar-card" id="notif-perm-card">
+          <h3 style="font-size:1.05rem; font-weight:800;">🔓 Enable Notifications</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">Your browser needs permission to send you gentle reminders. We never track anything — it's all local.</p>
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <button class="btn-primary" onclick="requestNotifPermission()">🔔 Enable Notifications</button>
+            <span id="notif-perm-status" style="font-size:0.85rem; font-weight:700;"></span>
           </div>
         </div>
+
+        <div class="reminders-grid" style="margin-top:22px;">
+          <div class="reminder-card" data-reminder="water">
+            <div class="reminder-icon" style="background:var(--bg-blue-subtle); color:var(--accent-blue-dark);">💧</div>
+            <h4>Water Reminder</h4>
+            <p>Sip through the day.</p>
+            <label class="reminder-toggle">
+              <input type="checkbox" id="rem-water-on" onchange="toggleReminder('water')">
+              <span>On</span>
+            </label>
+            <label class="reminder-interval">
+              Every
+              <select id="rem-water-interval" onchange="saveReminders()">
+                <option value="30">30 min</option>
+                <option value="60" selected>1 hour</option>
+                <option value="90">1.5 hours</option>
+                <option value="120">2 hours</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="reminder-card" data-reminder="meditate">
+            <div class="reminder-icon" style="background:var(--bg-lavender-subtle); color:var(--accent-lavender-dark);">🧘</div>
+            <h4>Meditation Reminder</h4>
+            <p>2-min mindfulness break.</p>
+            <label class="reminder-toggle">
+              <input type="checkbox" id="rem-meditate-on" onchange="toggleReminder('meditate')">
+              <span>On</span>
+            </label>
+            <label class="reminder-interval">
+              Every
+              <select id="rem-meditate-interval" onchange="saveReminders()">
+                <option value="120">2 hours</option>
+                <option value="180" selected>3 hours</option>
+                <option value="240">4 hours</option>
+                <option value="360">6 hours</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="reminder-card" data-reminder="breath">
+            <div class="reminder-icon" style="background:rgba(74, 222, 128, 0.18); color:#059669;">🌬️</div>
+            <h4>Breathing Reminder</h4>
+            <p>Reset with 4-4-4-4 box breath.</p>
+            <label class="reminder-toggle">
+              <input type="checkbox" id="rem-breath-on" onchange="toggleReminder('breath')">
+              <span>On</span>
+            </label>
+            <label class="reminder-interval">
+              Every
+              <select id="rem-breath-interval" onchange="saveReminders()">
+                <option value="60">1 hour</option>
+                <option value="120" selected>2 hours</option>
+                <option value="180">3 hours</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="reminder-card" data-reminder="checkin">
+            <div class="reminder-icon" style="background:var(--bg-yellow-subtle); color:var(--accent-yellow-dark);">😌</div>
+            <h4>Check-In Reminder</h4>
+            <p>How are you feeling?</p>
+            <label class="reminder-toggle">
+              <input type="checkbox" id="rem-checkin-on" onchange="toggleReminder('checkin')">
+              <span>On</span>
+            </label>
+            <label class="reminder-interval">
+              Every
+              <select id="rem-checkin-interval" onchange="saveReminders()">
+                <option value="180">3 hours</option>
+                <option value="240" selected>4 hours</option>
+                <option value="360">6 hours</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <p style="text-align:center; font-size:0.78rem; color:var(--text-muted); margin-top:22px;">Reminders only fire while the tab is open. For always-on, keep this pinned in your browser.</p>
       </section>
 
       <!-- TAB 7: VENTING JOURNAL & GETWELL AI -->
@@ -734,10 +954,13 @@
   <script src="js/modules/anxiety.js"></script>
   <script src="js/modules/depression.js"></script>
   <script src="js/modules/selfharm.js"></script>
-  <script src="js/modules/parental.js"></script>
-  <script src="js/modules/substance.js"></script>
   <script src="js/modules/crisis.js"></script>
   <script src="js/modules/journal.js"></script>
+  <script src="js/modules/timeCapsule.js"></script>
+  <script src="js/modules/pet.js"></script>
+  <script src="js/modules/safeSpace.js"></script>
+  <script src="js/modules/reminders.js"></script>
+  <script src="js/modules/moodSummary.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

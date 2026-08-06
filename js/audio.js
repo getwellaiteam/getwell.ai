@@ -4,6 +4,7 @@ let audioCtx = null;
 let activeNodes = {
   rain: null,
   waves: null,
+  whitenoise: null,
   binaural: null,
   piano: null
 };
@@ -165,6 +166,37 @@ function startSound(type) {
 
     activeNodes.waves = { source: noise, lfo: lfo, lfo2: lfo2, bias: biasGain, gain: gain };
 
+  } else if (type === 'whitenoise') {
+    // Warm white noise — full-spectrum but gently rolled off so it's not harsh
+    const bufferSize = ctx.sampleRate * 4;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    noise.loop = true;
+
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 120;
+
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 5200;
+
+    const gain = ctx.createGain();
+    gain.gain.value = 0.25;
+
+    noise.connect(hp);
+    hp.connect(lp);
+    lp.connect(gain);
+    gain.connect(ctx.destination);
+    noise.start();
+
+    activeNodes.whitenoise = { source: noise, gain: gain };
+
   } else if (type === 'binaural') {
     // 432 Hz calming focus tone
     const oscL = ctx.createOscillator();
@@ -221,6 +253,8 @@ function stopSound(type) {
     if (node.lfo) node.lfo.stop();
     if (node.lfo2) node.lfo2.stop();
     if (node.bias) node.bias.stop();
+  } else if (type === 'whitenoise') {
+    if (node.source) node.source.stop();
   } else if (type === 'binaural') {
     if (node.oscL) node.oscL.stop();
     if (node.oscR) node.oscR.stop();

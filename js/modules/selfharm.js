@@ -1,8 +1,29 @@
 /* Self-Harm Safety & Urge Toolkit */
 
 let urgeTimerInterval = null;
-let urgeTimeRemaining = 15 * 60; // 15 minutes in seconds
+const URGE_TOTAL_SECONDS = 15 * 60;
+let urgeTimeRemaining = URGE_TOTAL_SECONDS;
 let isUrgeTimerRunning = false;
+
+/* Wave visualizer state */
+let waveAnimId = null;
+let waveAnimT = 0;
+let waveAmplitude = 30;      // starts strong, calms with taps + time
+let waveTapCount = 0;
+let waveAffirmIdx = 0;
+let waveBreathTimerId = null;
+let waveBreathPhase = 0;     // 0 in, 1 hold, 2 out, 3 hold
+
+const WAVE_AFFIRMATIONS = [
+  "You are safe in this moment.",
+  "This feeling is a wave — it will pass.",
+  "Breathe in with the wave, out with the wave.",
+  "Every second you stay safe is a win.",
+  "Your body wants to survive. Trust it.",
+  "You've made it through 100% of your hardest days.",
+  "The wave is loudest just before it breaks.",
+  "You are allowed to just be here. That's enough."
+];
 
 function toggleUrgeTimer() {
   const btn = document.getElementById('timer-start-btn');
@@ -18,14 +39,19 @@ function toggleUrgeTimer() {
 function startUrgeTimer() {
   if (isUrgeTimerRunning) return;
   isUrgeTimerRunning = true;
-  
+  startWaveAnimation();
+  startBreathCoach();
+
   urgeTimerInterval = setInterval(() => {
     if (urgeTimeRemaining > 0) {
       urgeTimeRemaining--;
       updateUrgeTimerDisplay();
+      // Gradually calm the wave over the 15 min
+      const progress = 1 - urgeTimeRemaining / URGE_TOTAL_SECONDS;
+      waveAmplitude = Math.max(4, 30 - progress * 22);
     } else {
       pauseUrgeTimer();
-      alert("🌊 You did it! You rode out 15 minutes of the urge safely. Take a deep breath.");
+      showWaveCompletionMessage();
     }
   }, 1000);
 }
@@ -34,23 +60,159 @@ function pauseUrgeTimer() {
   if (urgeTimerInterval) clearInterval(urgeTimerInterval);
   urgeTimerInterval = null;
   isUrgeTimerRunning = false;
+  stopBreathCoach();
+  // Keep the wave gently animating even when paused so the page doesn't feel dead
 }
 
 function resetUrgeTimer() {
   pauseUrgeTimer();
-  urgeTimeRemaining = 15 * 60;
+  urgeTimeRemaining = URGE_TOTAL_SECONDS;
+  waveAmplitude = 30;
+  waveTapCount = 0;
   updateUrgeTimerDisplay();
+  updateWaveProgress();
+  const tapEl = document.getElementById('wave-tap-count');
+  if (tapEl) tapEl.textContent = '0';
   const btn = document.getElementById('timer-start-btn');
   if (btn) btn.textContent = '▶️ Ride the Wave';
+  const affirm = document.getElementById('wave-affirm');
+  if (affirm) affirm.textContent = WAVE_AFFIRMATIONS[0];
+  waveAffirmIdx = 0;
 }
 
 function updateUrgeTimerDisplay() {
   const display = document.getElementById('urge-timer-display');
-  if (!display) return;
+  if (display) {
+    const mins = Math.floor(urgeTimeRemaining / 60);
+    const secs = urgeTimeRemaining % 60;
+    display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+  updateWaveProgress();
+}
 
-  const mins = Math.floor(urgeTimeRemaining / 60);
-  const secs = urgeTimeRemaining % 60;
-  display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+function updateWaveProgress() {
+  const fill = document.getElementById('wave-progress-fill');
+  if (!fill) return;
+  const pct = ((URGE_TOTAL_SECONDS - urgeTimeRemaining) / URGE_TOTAL_SECONDS) * 100;
+  fill.style.width = pct.toFixed(1) + '%';
+}
+
+/* Ambient wave animation — keeps running as long as the tab is visible */
+function startWaveAnimation() {
+  if (waveAnimId) return;
+  const front = document.getElementById('wave-path-front');
+  const back = document.getElementById('wave-path-back');
+  if (!front || !back) return;
+
+  const hint = document.getElementById('wave-tap-hint');
+  if (hint) hint.style.opacity = '1';
+
+  const animate = () => {
+    waveAnimT += 0.03;
+    front.setAttribute('d', buildWavePath(waveAmplitude, waveAnimT, 160));
+    back.setAttribute('d', buildWavePath(waveAmplitude * 0.6, waveAnimT * 0.7 + 1, 140));
+    waveAnimId = requestAnimationFrame(animate);
+  };
+  animate();
+}
+
+function buildWavePath(amp, phase, baseY) {
+  // Smooth sine wave sampled to a cubic Bezier-ish path
+  const points = [];
+  for (let x = 0; x <= 400; x += 20) {
+    const y = baseY + Math.sin((x / 400) * Math.PI * 2 + phase) * amp
+                    + Math.sin((x / 400) * Math.PI * 4 + phase * 1.3) * (amp * 0.35);
+    points.push(`${x},${y.toFixed(1)}`);
+  }
+  return `M0,${baseY} L${points.join(' L')} L400,220 L0,220 Z`;
+}
+
+function tapWave(e) {
+  waveTapCount++;
+  const tapEl = document.getElementById('wave-tap-count');
+  if (tapEl) tapEl.textContent = waveTapCount;
+
+  // Each tap gently calms the amplitude — user is helping the wave settle
+  waveAmplitude = Math.max(4, waveAmplitude - 1.2);
+
+  // Cycle a soft affirmation every 3 taps
+  if (waveTapCount % 3 === 0) {
+    waveAffirmIdx = (waveAffirmIdx + 1) % WAVE_AFFIRMATIONS.length;
+    const affirm = document.getElementById('wave-affirm');
+    if (affirm) {
+      affirm.style.opacity = '0';
+      setTimeout(() => {
+        affirm.textContent = WAVE_AFFIRMATIONS[waveAffirmIdx];
+        affirm.style.opacity = '1';
+      }, 220);
+    }
+  }
+
+  const hint = document.getElementById('wave-tap-hint');
+  if (hint) hint.style.opacity = '0';
+
+  // Ripple visual at tap point
+  const stage = document.getElementById('wave-stage');
+  if (stage && e) {
+    const rect = stage.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const ripple = document.createElement('span');
+    ripple.className = 'wave-ripple';
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+    stage.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 900);
+  }
+
+  // Tell the plant something healthy happened
+  if (typeof waterPlant === 'function') waterPlant('breath', true);
+}
+
+/* Breathing coach cycles the orb on 4-4-4-4 while the wave is running */
+function startBreathCoach() {
+  const orb = document.getElementById('wave-breath-orb');
+  if (!orb) return;
+  waveBreathPhase = 0;
+  runBreathPhase();
+}
+
+function runBreathPhase() {
+  const orb = document.getElementById('wave-breath-orb');
+  if (!orb) return;
+  const affirm = document.getElementById('wave-affirm');
+
+  const labels = ['Breathe in…', 'Hold…', 'Breathe out…', 'Hold…'];
+  if (affirm && (waveBreathPhase === 0 || waveBreathPhase === 2)) {
+    affirm.textContent = labels[waveBreathPhase];
+  }
+
+  if (waveBreathPhase === 0) {
+    orb.style.transform = 'translate(-50%, -50%) scale(1.6)';
+  } else if (waveBreathPhase === 2) {
+    orb.style.transform = 'translate(-50%, -50%) scale(0.7)';
+  }
+
+  waveBreathTimerId = setTimeout(() => {
+    waveBreathPhase = (waveBreathPhase + 1) % 4;
+    runBreathPhase();
+  }, 4000);
+}
+
+function stopBreathCoach() {
+  if (waveBreathTimerId) {
+    clearTimeout(waveBreathTimerId);
+    waveBreathTimerId = null;
+  }
+}
+
+function showWaveCompletionMessage() {
+  const affirm = document.getElementById('wave-affirm');
+  if (affirm) {
+    affirm.textContent = "🌊 You rode the whole wave. You stayed safe. That was real courage.";
+  }
+  // Reward the plant if it's around
+  if (typeof waterPlant === 'function') waterPlant('meditate', true);
 }
 
 /* Scribble Canvas */
@@ -108,23 +270,55 @@ function clearScribbleCanvas() {
 
 function playBandSnapSound() {
   try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    const ctx = new AudioContext();
+    // Reuse the shared/resumed AudioContext from audio.js so autoplay policy is respected.
+    const ctx = (typeof getAudioContext === 'function')
+      ? getAudioContext()
+      : new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended' && ctx.resume) ctx.resume();
+
+    const now = ctx.currentTime;
+
+    // Noise burst = the "thwack"
+    const bufSize = Math.floor(ctx.sampleRate * 0.08);
+    const noiseBuf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const nd = noiseBuf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) {
+      nd[i] = (Math.random() * 2 - 1) * (1 - i / bufSize);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = noiseBuf;
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 1200;
+    bp.Q.value = 2.5;
+    const nGain = ctx.createGain();
+    nGain.gain.setValueAtTime(0.6, now);
+    nGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+    noise.connect(bp).connect(nGain).connect(ctx.destination);
+    noise.start(now);
+    noise.stop(now + 0.15);
+
+    // Pitched pluck adds the "band" character
     const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
+    const oscGain = ctx.createGain();
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(150, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.1);
+    osc.frequency.setValueAtTime(320, now);
+    osc.frequency.exponentialRampToValueAtTime(90, now + 0.14);
+    oscGain.gain.setValueAtTime(0.45, now);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+    osc.connect(oscGain).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.16);
 
-    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.1);
-  } catch (e) {}
+    // Give the button a small visual pulse so users know it fired
+    const btns = document.querySelectorAll('[onclick*="playBandSnapSound"]');
+    btns.forEach(b => {
+      b.classList.add('snap-pulse');
+      setTimeout(() => b.classList.remove('snap-pulse'), 220);
+    });
+  } catch (e) {
+    console.warn('Snap sound failed:', e);
+  }
 }
 
 /* Safety Plan Storage */
