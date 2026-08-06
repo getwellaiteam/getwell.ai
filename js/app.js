@@ -1,5 +1,26 @@
 /* Main Application Controller for getwell.ai */
 
+/* Which sub-tabs belong to which top-level sidebar group */
+const TAB_GROUPS = {
+  home:      ['dashboard'],
+  assistant: ['journal', 'capsule'],
+  toolkits:  ['anxiety', 'depression', 'selfharm'],
+  myspace:   ['safespace', 'pet', 'reminders']
+};
+
+/* Sub-tab display labels (icon + label). Used by the inner tab strip. */
+const TAB_LABELS = {
+  dashboard: { icon: '🏠', label: 'Home' },
+  journal:   { icon: '💬', label: 'Chat & Journal' },
+  capsule:   { icon: '⏳', label: 'Time Capsule' },
+  anxiety:   { icon: '🌬️', label: 'Anxiety & Panic' },
+  depression:{ icon: '☀️', label: 'Depression & Energy' },
+  selfharm:  { icon: '🛡️', label: 'Safety Toolkit' },
+  safespace: { icon: '🏡', label: 'Safe Space' },
+  pet:       { icon: '🌱', label: 'Virtual Plant' },
+  reminders: { icon: '🔔', label: 'Reminders' }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   const savedTheme = localStorage.getItem('haven_theme') || 'light';
   setTheme(savedTheme);
@@ -21,6 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof initSafeSpace === 'function') initSafeSpace();
   if (typeof renderMoodInsights === 'function') renderMoodInsights();
 
+  // Render initial sub-nav for the default (dashboard) tab
+  renderSubNav('home', 'dashboard');
+
   // Close theme picker on outside click
   document.addEventListener('click', (e) => {
     const menu = document.getElementById('theme-picker-menu');
@@ -30,7 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ESC toggles discreet mode (already in original app)
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       const spot = document.getElementById('spotify-modal');
@@ -43,27 +66,31 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log("getwell.ai initialized.");
 });
 
+function getTabGroup(tabId) {
+  for (const [group, tabs] of Object.entries(TAB_GROUPS)) {
+    if (tabs.includes(tabId)) return group;
+  }
+  return 'home';
+}
+
 function switchTab(tabId) {
-  const navItems = document.querySelectorAll('.nav-item');
-  navItems.forEach(item => {
-    if (item.getAttribute('data-tab') === tabId) {
-      item.classList.add('active');
-    } else {
-      item.classList.remove('active');
-    }
+  const group = getTabGroup(tabId);
+
+  // Highlight the correct sidebar group button
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.toggle('active', item.getAttribute('data-group') === group);
   });
 
-  const panes = document.querySelectorAll('.tab-pane');
-  panes.forEach(pane => {
-    if (pane.id === `tab-${tabId}`) {
-      pane.classList.add('active');
-    } else {
-      pane.classList.remove('active');
-    }
+  // Show the matching pane, hide the rest
+  document.querySelectorAll('.tab-pane').forEach(pane => {
+    pane.classList.toggle('active', pane.id === `tab-${tabId}`);
   });
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
+  renderSubNav(group, tabId);
+
+  // Post-navigation hooks
   if (tabId === 'depression') {
     setTimeout(renderMoodChart, 100);
   }
@@ -76,6 +103,30 @@ function switchTab(tabId) {
   if (tabId === 'capsule' && typeof renderSavedCapsules === 'function') {
     setTimeout(renderSavedCapsules, 50);
   }
+}
+
+function renderSubNav(group, activeTab) {
+  const container = document.getElementById('sub-nav');
+  if (!container) return;
+  const tabs = TAB_GROUPS[group] || [];
+
+  // No inner strip when the group has only one section (Home)
+  if (tabs.length <= 1) {
+    container.style.display = 'none';
+    container.innerHTML = '';
+    return;
+  }
+
+  container.style.display = 'flex';
+  container.innerHTML = tabs.map(t => {
+    const meta = TAB_LABELS[t] || { icon: '', label: t };
+    return `
+      <button class="sub-nav-item ${t === activeTab ? 'active' : ''}" onclick="switchTab('${t}')">
+        <span class="sub-nav-icon">${meta.icon}</span>
+        <span>${meta.label}</span>
+      </button>
+    `;
+  }).join('');
 }
 
 function selectMood(moodKey, label) {
@@ -143,7 +194,6 @@ function setBackground(bg, skipPersist) {
   document.body.setAttribute('data-bg', bg);
   if (!skipPersist) localStorage.setItem('haven_bg', bg);
 
-  // Mark active swatch
   document.querySelectorAll('.swatch').forEach(s => {
     if (s.getAttribute('data-bg') === bg) s.classList.add('active');
     else s.classList.remove('active');

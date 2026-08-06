@@ -1,358 +1,20 @@
-/* getwell.ai Assistant + Private Journal */
+/* Ellie — getwell.ai's Woebot / Youper-style guided CBT companion.
+   Conversation is a state machine: each state has one or more bot messages,
+   optional quick-reply chips, and either a `next` state key or a routing
+   function that inspects free-text input. */
 
-/* Each topic has several reply variants (so it doesn't feel like a canned
-   keyword bot) plus optional quick-action chips linking to real tools. */
-const botResponses = [
-  // Anxiety / Panic
-  {
-    category: 'anxiety',
-    keywords: ['anxious', 'anxiety', 'panic', 'freaking out', 'racing heart', 'chest tight', 'nervous', 'jittery', 'on edge'],
-    replies: [
-      "That racing feeling is your body's alarm — it's real but it's not dangerous. Try box breathing or the 5-4-3-2-1 grounding to anchor back to right now. Name 5 things you see out loud. Panic peaks around 10 min then fades.",
-      "Okay, let's slow this down together. Your nervous system thinks there's danger, but you're safe right now. Four seconds in, four seconds out — box breathing can bring your heart rate down fast.",
-      "That's a lot to carry. Anxiety spikes feel endless in the moment but they're short — usually under 10-15 minutes if you don't fight it. Want to try a grounding exercise together?"
-    ],
-    chips: [{ label: '🌬️ Try Box Breathing', tab: 'anxiety' }]
-  },
-  {
-    category: 'sleep',
-    keywords: ["can't sleep", 'cant sleep', 'insomnia', 'sleep', 'up at night', 'tired but wired', 'wide awake'],
-    replies: [
-      "Sleep struggles are super common in high school. Try: dim your screen 30 min before bed, no doomscrolling in bed, and if your brain won't shut up, dump every thought into the journal — get it OUT of your head. Resting still counts.",
-      "A wired brain at 1am is the worst. Try writing down everything looping in your head so it's on paper instead of in your skull. Your body still recovers even if actual sleep takes a while."
-    ],
-    chips: [{ label: '📓 Brain-dump in Journal', tab: 'journal' }]
-  },
-  // Depression / low mood
-  {
-    category: 'depression',
-    keywords: ['depressed', 'depression', 'empty', 'numb', 'nothing matters', "don't care", 'no motivation', 'no energy', 'exhausted', 'burned out', 'burnt out', 'hopeless'],
-    replies: [
-      "Heavy days are real. On these days, the goal isn't productivity — it's survival with softness. Try one micro-win (drank water, opened a window). Existing counts. You're not lazy — you're carrying something.",
-      "That flatness is exhausting in a way people don't always get. You don't have to fix today, just get through it gently. One tiny win logged can actually shift momentum a little.",
-      "Depression lies and says nothing you do matters. It's not true, it's just loud right now. Pick literally the smallest possible thing and do just that one thing."
-    ],
-    chips: [{ label: '☀️ Log a Micro-Win', tab: 'depression' }]
-  },
-  {
-    category: 'sadLonely',
-    keywords: ['sad', 'crying', 'cried', 'lonely', 'alone', 'isolated', 'nobody cares', 'no one likes me'],
-    replies: [
-      "That loneliness is heavy. It doesn't mean you're unlovable — it usually means you're going through something bigger than the people around you know. Texting one person a meme today counts, even if you don't feel like talking.",
-      "Feeling alone in a full building of people is its own specific kind of awful. You're allowed to be sad about it without having to explain it perfectly to anyone."
-    ],
-    chips: [{ label: '🏆 Athlete Affirmations', tab: 'depression' }]
-  },
-  // Self harm / suicide — HIGHEST priority, kept serious and consistent
-  {
-    category: 'crisis',
-    keywords: ['hurt myself', 'self harm', 'self-harm', 'cutting', 'cut myself', 'urge', 'kill myself', 'kms', 'suicide', 'suicidal', 'end it', 'not worth living', 'want to die'],
-    replies: [
-      "I'm really glad you told me. Your safety matters more than anything right now. Please tap the red 🆘 24/7 Crisis Help button and call/text 988 — real people, no judgment, free. The Self-Harm Safety tab has an interactive 'Ride the Wave' urge visualizer that can help you get through the peak.",
-      "Thank you for saying that out loud — that takes real courage. Please reach out right now to 988 (call or text) or tap 🆘 Crisis Help above. You deserve support from a real person tonight, and the wave visualizer in Self-Harm Safety can help you get through this next stretch of time."
-    ],
-    chips: [{ label: '🆘 Crisis Help', action: 'openCrisisModal()' }, { label: '🛡️ Ride the Wave', tab: 'selfharm' }]
-  },
-  // Family — moved from dedicated tab into chatbot
-  {
-    category: 'family',
-    keywords: ['parents', 'family', 'mom', 'dad', 'mother', 'father', 'strict', 'controlling', 'yelling', 'arguing', 'fight with', 'kicked out', 'grounded', 'household', 'chores'],
-    replies: [
-      "Family pressure is one of the heaviest things — it's the people who are supposed to be safe. You're allowed to love them AND need space from them. Try this script for a hard conversation: \"I know you want the best for me. I need you to hear that (X) is hurting me. Can we talk about (Y) without it becoming a fight?\"",
-      "That sounds exhausting to carry at home. If you're worried about grades, remember: colleges care about growth, not perfection, and one bad quarter isn't a life sentence. If it's about privacy or independence — you're not being ungrateful, you're growing up.",
-      "For strict parents: pick ONE thing to advocate for at a time, not everything at once. Bring one concrete ask (\"can I stay out until 10 on Fridays\") not a global argument (\"you never let me do anything\"). Bring it calm, at a calm moment, not mid-fight."
-    ],
-    chips: [{ label: '⏳ Time Capsule', tab: 'capsule' }]
-  },
-  {
-    category: 'sibling',
-    keywords: ['sibling', 'brother', 'sister', 'babysit', 'take care of', 'responsible for'],
-    replies: [
-      "Being a built-in caretaker at your age is a lot, and it's not fair. You're allowed to feel resentment AND love them at the same time. Take breaks when you can.",
-      "Carrying that much responsibility for siblings at your age is genuinely a lot of unpaid labor. It's okay to feel tired of it — that doesn't make you a bad sibling. If you can, tell a parent one honest thing: \"I need one afternoon a week that's just mine.\""
-    ]
-  },
-  // School / grades
-  {
-    category: 'school',
-    keywords: ['grade', 'grades', 'gpa', 'test', 'exam', 'finals', 'midterm', 'quiz', 'homework', 'assignment', 'essay', 'project', 'ap', 'sat', 'act'],
-    replies: [
-      "School stress is real. Grades feel like they're everything right now but they truly aren't — colleges care about growth, and adults barely look at GPA past 22. Pick ONE assignment, set a 25-min timer, do just that.",
-      "Grades pressure is brutal because it feels permanent when it isn't. Perfectionism is usually the actual enemy here, not your ability — done beats perfect every time."
-    ],
-    chips: [{ label: '🌬️ Reframe the Thought', tab: 'anxiety' }]
-  },
-  {
-    category: 'college',
-    keywords: ['college', 'university', 'application', 'college app', 'apply', 'get into', 'rejection', 'rejected', 'ivy'],
-    replies: [
-      "College anxiety is legit but the process lies to you — there's no ONE right school. Almost everyone ends up happy at their eventual college. Focus on 2-3 controllable things this week.",
-      "The college process makes a lot of noise about scarcity that isn't really true. Thousands of paths lead to a good life — this isn't a one-shot deal."
-    ],
-    chips: [{ label: '🌬️ Ground Yourself', tab: 'anxiety' }]
-  },
-  {
-    category: 'teacher',
-    keywords: ['teacher', 'unfair', 'strict teacher', 'hate school', 'hate class', 'bad teacher'],
-    replies: [
-      "Unfair teachers are genuinely infuriating and you're not being dramatic. Document what happens (dates + what was said), talk to a counselor if it's serious, and don't let one class define your energy."
-    ]
-  },
-  // Social / friends
-  {
-    category: 'friends',
-    keywords: ['friend', 'friends', 'friendship', 'no friends', 'fake friends', 'drama', 'left out', 'ghosted', 'ghosting', 'popular', 'clique', 'group chat'],
-    replies: [
-      "Friendship stuff in high school is BRUTAL. Cliques, group chats, being left out — it all messes with your head. Real friends make you feel calmer, not anxious. Quality over quantity, always.",
-      "Feeling on the outside of a friend group hurts in a very specific way. It says more about the dynamic than it does about you being unlikeable."
-    ]
-  },
-  {
-    category: 'bully',
-    keywords: ['bully', 'bullied', 'bullying', 'picked on', 'made fun', 'mean girls', 'harass'],
-    replies: [
-      "Being bullied is not something to just 'get over.' Please tell an adult you trust — counselor, coach, parent. Document with screenshots. This is not your fault and there ARE adults who will take it seriously."
-    ]
-  },
-  // Breakup
-  {
-    category: 'breakup',
-    keywords: ['breakup', 'broke up', 'break up', 'dumped', 'heartbreak', 'heartbroken', 'my ex', 'ghosted me'],
-    replies: [
-      "Breakups genuinely feel like grief — that's real, not dramatic. Your brain treats them like a loss. Cry, listen to sad music, then slowly reintroduce your favorite non-them things.",
-      "That kind of hurt takes real time, there's no shortcut. Be extra gentle with yourself this week."
-    ],
-    chips: [{ label: '☀️ Something Uplifting', tab: 'depression' }]
-  },
-  {
-    category: 'rejection',
-    keywords: ['rejected', 'not interested', 'unrequited', 'said no'],
-    replies: [
-      "Rejection stings HARD and it's not because something is wrong with you. Their 'no' is about their preferences, not your worth."
-    ]
-  },
-  // Romantic (general)
-  {
-    category: 'romance',
-    keywords: ['crush', 'boyfriend', 'girlfriend', 'partner', 'dating', 'in love'],
-    replies: [
-      "Feelings are wild at this age. If someone's making you happier and more like yourself, that's a good sign. If they're making you anxious or jealous — that's info too."
-    ]
-  },
-  // Identity / LGBTQ
-  {
-    category: 'identity',
-    keywords: ['gay', 'lesbian', 'bisexual', 'bi ', 'queer', 'lgbtq', 'lgbt', 'trans', 'transgender', 'nonbinary', 'non-binary', 'coming out', 'closeted', 'gender', 'pronouns'],
-    replies: [
-      "You're valid however you identify, and figuring it out doesn't need a deadline. The Trevor Project (1-866-488-7386 or text START to 678-678) has 24/7 free confidential counselors trained in LGBTQ youth support — it's in the 🆘 Crisis Help modal too."
-    ],
-    chips: [{ label: '🆘 Crisis & Support Lines', action: 'openCrisisModal()' }]
-  },
-  // Substance — moved from dedicated tab into chatbot
-  {
-    category: 'substance',
-    keywords: ['vape', 'vaping', 'nicotine', 'juul', 'weed', 'marijuana', 'edible', 'drunk', 'drink', 'alcohol', 'shots', 'pills', 'xan', 'addicted', 'addiction', 'quit', 'cravings', 'smoke', 'smoking'],
-    replies: [
-      "Zero judgment. Substance stuff is really common at your age and doesn't make you a bad person. If you're trying to cut back, cravings peak in about 15-20 minutes and then fade — the Ride the Wave visualizer in Self-Harm Safety works for cravings too. SAMHSA (1-800-662-4357) is free, confidential, 24/7.",
-      "Refusal scripts for when someone hands you a vape/drink/pill: (1) casual — \"nah I'm good, drug test coming up.\" (2) direct — \"my stomach can't handle it.\" (3) deflect — \"I'm already on my third energy drink.\" You don't owe anyone a real reason.",
-      "If it's a family member's drinking/drugs that's affecting you, Alateen is free and specifically for teens in that situation (al-anon.org/teen). You're not alone in it."
-    ],
-    chips: [{ label: '🛡️ Ride the Wave', tab: 'selfharm' }, { label: '🆘 Crisis Help', action: 'openCrisisModal()' }]
-  },
-  // Body / eating
-  {
-    category: 'body',
-    keywords: ['fat', 'ugly', 'body', 'weight', 'skinny', 'starve', 'binge', 'purge', 'anorex', 'bulim', 'eating disorder', 'restrict', 'calories', 'appearance', 'hate my body'],
-    replies: [
-      "The way you feel about your body isn't the same as what's real — mirrors and mood lie to each other. If eating stuff is getting hard to control, that's worth telling someone. NEDA hotline: 1-800-931-2237."
-    ]
-  },
-  {
-    category: 'appearance',
-    keywords: ['acne', 'skin', 'pimple', 'breakout', 'hair', 'ugly face'],
-    replies: [
-      "Skin and appearance stuff hits hardest at your age and you're not being shallow for caring. Most people are way less focused on how you look than you think."
-    ]
-  },
-  // Stress / overwhelm
-  {
-    category: 'stressed',
-    keywords: ['stressed', 'stress', 'overwhelmed', 'too much', 'drowning', "can't handle", 'cant handle', 'breaking down'],
-    replies: [
-      "Overwhelm usually means you're carrying too many mental tabs open. Write down every single thing on your mind, then circle ONE thing you can do in 15 min. Do that. Ignore the rest for tonight.",
-      "That drowning feeling is a signal you're carrying too much at once, not that you're failing. Let's shrink it down to one single next step."
-    ],
-    chips: [{ label: '🌬️ Grounding Tools', tab: 'anxiety' }, { label: '⏳ Letter from Future You', tab: 'capsule' }]
-  },
-  {
-    category: 'procrastination',
-    keywords: ['procrastinate', 'procrastinating', "can't start", 'cant start', 'avoiding', 'putting off'],
-    replies: [
-      "Procrastination is usually anxiety in disguise — your brain trying to avoid something scary. Trick it: set a 5-min timer and start the tiniest version of the task. Even opening the doc counts."
-    ]
-  },
-  {
-    category: 'angry',
-    keywords: ['angry', 'anger', 'mad', 'furious', 'rage', 'want to scream', 'hate everyone'],
-    replies: [
-      "Anger is valid — it usually means something you care about got hurt. Get it out of your body first: run, punch a pillow, use the scribble canvas, or write in the private journal. Cool down THEN act."
-    ],
-    chips: [{ label: '🎨 Scribble Canvas', tab: 'selfharm' }]
-  },
-  // Existential / meaning
-  {
-    category: 'existential',
-    keywords: ['pointless', "what's the point", 'meaningless', 'why bother', 'why try', 'giving up'],
-    replies: [
-      "That flatness is a symptom, not the truth. Depression whispers 'nothing matters' but you probably still care about at least one thing — a friend, a song, a pet, a show. Start there."
-    ],
-    chips: [{ label: '☀️ Depression Toolkit', tab: 'depression' }]
-  },
-  {
-    category: 'future',
-    keywords: ['future', 'what am i doing', 'lost', "don't know what i want", 'career', 'major', 'purpose'],
-    replies: [
-      "Not knowing what you want at 15-18 is the ACTUAL normal — the confident ones are usually faking it. Pay attention to what you're curious about, not what impresses people."
-    ],
-    chips: [{ label: '⏳ Time Capsule', tab: 'capsule' }]
-  },
-  // General help / how do I use this
-  {
-    category: 'howto',
-    keywords: ['how do i', 'how to', 'help me', 'what can', 'what should i do', "don't know what to do", 'dont know what to do'],
-    replies: [
-      "You can tell me anything and I'll point you somewhere useful. What's actually on your mind right now?"
-    ],
-    chips: [
-      { label: '🌬️ Anxiety Tools', tab: 'anxiety' },
-      { label: '☀️ Depression Tools', tab: 'depression' },
-      { label: '🛡️ Self-Harm Safety', tab: 'selfharm' }
-    ]
-  },
-  {
-    category: 'thanks',
-    keywords: ['thanks', 'thank you', 'ty', 'thx', 'appreciate'],
-    replies: ["Any time. Seriously. Come back whenever. 🌸", "Of course — that's what I'm here for."]
-  },
-  {
-    category: 'whoAreYou',
-    keywords: ['who are you', 'what are you', 'are you real', 'are you a bot', 'are you ai'],
-    replies: [
-      "I'm the getwell.ai assistant — a supportive tool built for high schoolers. I'm not a replacement for a therapist or friend, but I'm here 24/7, no judgment, and everything you type stays in your browser. For real crises, tap 🆘 Crisis Help."
-    ]
-  },
-  {
-    category: 'greeting',
-    keywords: ['hi', 'hey', 'hello', 'yo', 'sup'],
-    replies: ["Hey! Glad you're here. How's your day actually going — not the surface answer?", "Hi! What's actually on your mind today?"]
-  }
-];
+/* ============================================================================
+   CONVERSATION STATE
+   ============================================================================ */
+let chatState = 'start';         // current node id
+let chatHistory = [];            // {role: 'bot'|'user', text}
+let chatAwaitingChip = false;    // if true, the input bar is dimmed but usable
+let chatTypingId = null;         // guard so we don't stack indicators
+let chatDone = false;            // set when the flow ends; free text uses fallback
 
-const fallbackReplies = [
-  "I hear you. Tell me more — what's the heaviest part right now?",
-  "That sounds like a lot. If you want, we can try grounding, a micro-win, or you can just keep venting here — your call.",
-  "Thank you for trusting me with that. What would feel like even 1% relief right now?",
-  "You're doing the hard thing — actually naming what's going on. What do you wish someone would say back?",
-  "That's real. I'm here. Do you want practical steps or just to be heard?"
-];
-
-/* ---------- Intro topic screen ---------- */
-const introTopics = [
-  { key: 'anxiety',    icon: '🌬️', label: 'Anxiety or panic',      opener: "Anxiety is hard. What's making your chest tight right now?" },
-  { key: 'depression', icon: '☀️', label: 'Feeling low or empty',   opener: "Heavy days are real. What's feeling flat or too heavy today?" },
-  { key: 'family',     icon: '🏠', label: 'Family or parents',       opener: "Family stuff is heavy because they're supposed to be safe. What's going on at home?" },
-  { key: 'school',     icon: '📚', label: 'School, grades, college', opener: "School pressure is a lot. What's the assignment or class stressing you out?" },
-  { key: 'friends',    icon: '👥', label: 'Friends or relationships',opener: "Social stuff at school is brutal. What went down?" },
-  { key: 'substance',  icon: '🌱', label: 'Vaping, weed, alcohol, or cravings', opener: "Zero judgment here. Are you trying to cut back, or is someone in your life using?" },
-  { key: 'selfharm',   icon: '🛡️', label: 'Self-harm urges or safety',opener: "Thank you for coming here. You're safe in this moment. Can you tell me what's going on?" },
-  { key: 'stressed',   icon: '😩', label: 'Overwhelmed by everything',opener: "When everything piles up at once, it drowns out any next step. What's on your mental list right now?" },
-  { key: 'other',      icon: '💬', label: 'Something else / not sure',opener: "I'm here. Take your time. What's on your mind?" }
-];
-
-let chatIntroShown = false;
-let chatLastCategory = null;
-let chatLastReplyIdx = {};
-
-function initChatAssistant() {
-  const messages = document.getElementById('chat-messages');
-  if (!messages) return;
-
-  messages.innerHTML = '';
-  chatIntroShown = false;
-  chatLastCategory = null;
-  chatLastReplyIdx = {};
-
-  appendBotBubble("👋 Hey — I'm your getwell.ai assistant. I'm here to listen without judgment. What would you like to talk about?");
-  showTopicChooser();
-}
-
-function showTopicChooser() {
-  const messages = document.getElementById('chat-messages');
-  if (!messages) return;
-
-  const wrap = document.createElement('div');
-  wrap.className = 'chat-topic-grid';
-  wrap.id = 'chat-topic-grid';
-
-  introTopics.forEach(t => {
-    const btn = document.createElement('button');
-    btn.className = 'chat-topic-btn';
-    btn.innerHTML = `<span class="chat-topic-icon">${t.icon}</span><span class="chat-topic-label">${escapeHtml(t.label)}</span>`;
-    btn.onclick = () => pickIntroTopic(t.key);
-    wrap.appendChild(btn);
-  });
-
-  messages.appendChild(wrap);
-  messages.scrollTop = messages.scrollHeight;
-}
-
-function pickIntroTopic(key) {
-  const grid = document.getElementById('chat-topic-grid');
-  if (grid) grid.remove();
-
-  chatIntroShown = true;
-
-  const topic = introTopics.find(t => t.key === key) || introTopics[introTopics.length - 1];
-  appendUserBubble(topic.label);
-
-  setTimeout(() => {
-    // For known categories, use the matching bot response's chips
-    const matching = botResponses.find(r => r.category === key);
-    const chips = matching ? matching.chips : null;
-    appendBotBubble(escapeHtml(topic.opener), chips);
-    chatLastCategory = key;
-  }, 350);
-}
-
-function handleChatKeyPress(e) {
-  if (e.key === 'Enter') {
-    sendChatMessage();
-  }
-}
-
-function sendChatMessage() {
-  const input = document.getElementById('chat-input');
-  const messages = document.getElementById('chat-messages');
-  if (!input || !messages || !input.value.trim()) return;
-
-  const userText = input.value.trim();
-  appendUserBubble(userText);
-  input.value = '';
-
-  // If the user typed before choosing a topic, dismiss the topic grid
-  if (!chatIntroShown) {
-    const grid = document.getElementById('chat-topic-grid');
-    if (grid) grid.remove();
-    chatIntroShown = true;
-  }
-
-  setTimeout(() => {
-    const { html, chips, category } = getBotReply(userText);
-    appendBotBubble(html, chips);
-    chatLastCategory = category;
-  }, 500);
-}
-
+/* ============================================================================
+   HELPERS — bubbles, typing, chips
+   ============================================================================ */
 function appendUserBubble(text) {
   const messages = document.getElementById('chat-messages');
   if (!messages) return;
@@ -361,86 +23,997 @@ function appendUserBubble(text) {
   bubble.textContent = text;
   messages.appendChild(bubble);
   messages.scrollTop = messages.scrollHeight;
+  chatHistory.push({ role: 'user', text });
 }
 
-function appendBotBubble(html, chips) {
+function appendBotBubble(text) {
   const messages = document.getElementById('chat-messages');
   if (!messages) return;
   const bubble = document.createElement('div');
   bubble.className = 'chat-bubble bot';
-  bubble.innerHTML = html;
-
-  if (chips && chips.length) {
-    const chipRow = document.createElement('div');
-    chipRow.style.cssText = 'display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;';
-    chips.forEach(chip => {
-      const btn = document.createElement('button');
-      btn.className = 'btn-secondary';
-      btn.style.cssText = 'padding:6px 12px; font-size:0.78rem;';
-      btn.textContent = chip.label;
-      btn.onclick = () => {
-        if (chip.action === 'openCrisisModal()') {
-          openCrisisModal();
-        } else if (chip.tab) {
-          switchTab(chip.tab);
-        }
-      };
-      chipRow.appendChild(btn);
-    });
-    bubble.appendChild(chipRow);
-  }
-
+  bubble.innerHTML = escapeHtml(text);
   messages.appendChild(bubble);
+  messages.scrollTop = messages.scrollHeight;
+  chatHistory.push({ role: 'bot', text });
+}
+
+function showTyping() {
+  const messages = document.getElementById('chat-messages');
+  if (!messages) return;
+  hideTyping();
+  const el = document.createElement('div');
+  el.className = 'chat-typing';
+  el.id = 'chat-typing-indicator';
+  el.innerHTML = '<span></span><span></span><span></span>';
+  messages.appendChild(el);
   messages.scrollTop = messages.scrollHeight;
 }
 
-function getBotReply(userText) {
-  const textLower = userText.toLowerCase();
-
-  // Score-based match: multi-word keywords use substring; single words match on word boundaries
-  let bestScore = 0;
-  let bestItem = null;
-  for (const item of botResponses) {
-    let score = 0;
-    for (const k of item.keywords) {
-      const kNorm = k.trim();
-      const hasSpace = kNorm.includes(' ');
-      if (hasSpace) {
-        if (textLower.includes(kNorm)) score++;
-      } else {
-        const re = new RegExp('\\b' + kNorm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i');
-        if (re.test(textLower)) score++;
-      }
-    }
-    if (score > bestScore) {
-      bestScore = score;
-      bestItem = item;
-    }
-  }
-
-  let replyText;
-  let category;
-  let chips;
-
-  if (bestItem) {
-    category = bestItem.category;
-    chips = bestItem.chips;
-    const idxKey = category;
-    let idx = Math.floor(Math.random() * bestItem.replies.length);
-    if (bestItem.replies.length > 1 && chatLastReplyIdx[idxKey] === idx) {
-      idx = (idx + 1) % bestItem.replies.length;
-    }
-    chatLastReplyIdx[idxKey] = idx;
-    replyText = bestItem.replies[idx];
-  } else {
-    category = 'fallback';
-    replyText = fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
-  }
-
-  return { html: escapeHtml(replyText), chips, category };
+function hideTyping() {
+  const el = document.getElementById('chat-typing-indicator');
+  if (el) el.remove();
 }
 
-/* Journal */
+function clearChips() {
+  const chips = document.getElementById('chat-chips');
+  if (!chips) return;
+  chips.innerHTML = '';
+  chips.style.display = 'none';
+  chatAwaitingChip = false;
+  const bar = document.getElementById('chat-input-bar');
+  if (bar) bar.classList.remove('awaiting-chip');
+}
+
+function showChips(chipList) {
+  const container = document.getElementById('chat-chips');
+  if (!container || !chipList || !chipList.length) {
+    clearChips();
+    return;
+  }
+  container.innerHTML = '';
+  chipList.forEach(chip => {
+    const btn = document.createElement('button');
+    btn.className = 'chat-chip' + (chip.primary ? ' chip-primary' : '') + (chip.danger ? ' chip-danger' : '');
+    btn.textContent = chip.label;
+    btn.onclick = () => onChipClick(chip);
+    container.appendChild(btn);
+  });
+  container.style.display = 'flex';
+  chatAwaitingChip = true;
+  const bar = document.getElementById('chat-input-bar');
+  if (bar) bar.classList.add('awaiting-chip');
+}
+
+function onChipClick(chip) {
+  // Show the chip label as if the user typed it
+  appendUserBubble(chip.label);
+  clearChips();
+
+  // Chip can trigger an action (navigate to a tab / open crisis modal) AND move to a next state
+  if (chip.action) {
+    try { chip.action(); } catch (e) { /* swallow */ }
+  }
+  if (chip.tab) {
+    // Small delay so the user sees their choice appear first
+    setTimeout(() => switchTab(chip.tab), 300);
+  }
+  if (chip.next) {
+    goToState(chip.next);
+  } else if (chip.end) {
+    completeFlow();
+  }
+}
+
+/* ============================================================================
+   ENGINE — running a state
+   ============================================================================ */
+async function goToState(stateId) {
+  const node = CHAT_FLOWS[stateId];
+  if (!node) {
+    console.warn('Unknown chat state:', stateId);
+    return;
+  }
+  chatState = stateId;
+  chatDone = false;
+
+  const messages = (typeof node.messages === 'function') ? node.messages() : node.messages;
+
+  for (let i = 0; i < messages.length; i++) {
+    showTyping();
+    // Longer pause on the first message so it doesn't feel like a canned dump
+    const delay = 550 + Math.min(messages[i].length * 18, 900);
+    await sleep(delay);
+    hideTyping();
+    appendBotBubble(messages[i]);
+    if (i < messages.length - 1) await sleep(220);
+  }
+
+  if (node.chips) {
+    const chipList = (typeof node.chips === 'function') ? node.chips() : node.chips;
+    await sleep(150);
+    showChips(chipList);
+  } else if (node.end) {
+    completeFlow();
+  } else if (node.free) {
+    // Awaiting free-text input; no chips
+    clearChips();
+  }
+}
+
+function completeFlow() {
+  clearChips();
+  chatDone = true;
+  chatState = 'freeform';
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+/* ============================================================================
+   FLOWS — the actual conversation content
+   Each node: { messages, chips? (or free/end), next? }
+   ============================================================================ */
+const CHAT_FLOWS = {
+  'start': {
+    messages: [
+      "Hey — I'm Ellie 🌸",
+      "I'm your CBT-inspired support buddy. Everything you say stays on your device.",
+      "What's going on right now? Pick whatever feels closest — or type your own."
+    ],
+    chips: [
+      { label: '😰 Anxious or panicking', next: 'anxiety:intensity' },
+      { label: '😔 Feeling low or empty', next: 'depression:intro' },
+      { label: '😩 Overwhelmed by everything', next: 'overwhelmed:name' },
+      { label: '🏠 Family or parents', next: 'family:intro' },
+      { label: '📚 School, grades, college', next: 'school:intro' },
+      { label: '👥 Friends or relationships', next: 'friends:intro' },
+      { label: '🌱 Substance stuff', next: 'substance:intro' },
+      { label: '🛡️ Self-harm urges', next: 'safety:check' },
+      { label: '💬 Just want to talk', next: 'freeform:open' }
+    ]
+  },
+
+  /* ---------- ANXIETY ---------- */
+  'anxiety:intensity': {
+    messages: [
+      "Anxiety is really hard. Let's work through it together.",
+      "On a scale of 1 to 10, how loud is it right now?"
+    ],
+    chips: [
+      { label: '1–3 · Manageable', next: 'anxiety:low' },
+      { label: '4–6 · Uncomfortable', next: 'anxiety:mid' },
+      { label: '7–10 · Overwhelming', next: 'anxiety:high' }
+    ]
+  },
+  'anxiety:high': {
+    messages: [
+      "Okay — that's a lot. Your nervous system is in alarm mode.",
+      "First: you're safe in this moment. This spike will peak and pass, usually within 10-15 minutes.",
+      "Let's do one concrete thing to bring you down. What sounds doable?"
+    ],
+    chips: [
+      { label: '🌬️ Box breathing', tab: 'anxiety', next: 'anxiety:tool-suggested' },
+      { label: '🖐️ 5-4-3-2-1 grounding', tab: 'anxiety', next: 'anxiety:tool-suggested' },
+      { label: 'Just keep talking', next: 'anxiety:body' }
+    ]
+  },
+  'anxiety:mid': {
+    messages: [
+      "Okay — uncomfortable but not overwhelming. That's a workable spot.",
+      "Is it more in your body (racing heart, tight chest, shaky) or in your head (looping thoughts, worst-case scenarios)?"
+    ],
+    chips: [
+      { label: '💓 Mostly body', next: 'anxiety:body' },
+      { label: '🧠 Mostly thoughts', next: 'anxiety:thoughts' },
+      { label: 'Both', next: 'anxiety:body' }
+    ]
+  },
+  'anxiety:low': {
+    messages: [
+      "Good — catching it while it's still small is exactly the right move.",
+      "Do you want a technique to knock it down further, or just talk it out?"
+    ],
+    chips: [
+      { label: '🌬️ Give me a technique', tab: 'anxiety', next: 'anxiety:tool-suggested' },
+      { label: '💬 Just talk it out', next: 'anxiety:thoughts' }
+    ]
+  },
+  'anxiety:body': {
+    messages: [
+      "Body anxiety needs a body fix. Breathing changes your heart rate faster than any thought ever will.",
+      "Box breathing is 4 in, 4 hold, 4 out, 4 hold — for 2 minutes."
+    ],
+    chips: [
+      { label: '🌬️ Open Box Breathing', tab: 'anxiety', next: 'anxiety:tool-suggested' },
+      { label: 'Show me 5-4-3-2-1', tab: 'anxiety', next: 'anxiety:tool-suggested' },
+      { label: 'Just keep talking', next: 'anxiety:thoughts' }
+    ]
+  },
+  'anxiety:thoughts': {
+    messages: [
+      "Anxious thoughts feel like facts. They're usually predictions your brain made too confidently.",
+      "What's the loudest thought right now? Type it in one sentence if you can."
+    ],
+    free: true
+  },
+  'anxiety:reframe': {
+    messages: () => [
+      "Okay, let's put that thought on trial for a second.",
+      "Is there real evidence it's true, or is it your brain assuming the worst?",
+      "Would you tell a friend the exact same thing if THEY were in your shoes?"
+    ],
+    chips: [
+      { label: "It's probably my brain assuming", next: 'anxiety:validate' },
+      { label: "There's some real evidence", next: 'anxiety:evidence' },
+      { label: "I'd be kinder to a friend", next: 'anxiety:validate' }
+    ]
+  },
+  'anxiety:validate': {
+    messages: [
+      "That's the whole game — you just did the hardest part of CBT.",
+      "Your brain isn't lying on purpose. It's trying to protect you. But you don't have to believe every prediction it makes.",
+      "Want to try a technique or keep talking?"
+    ],
+    chips: [
+      { label: '🌬️ Try Box Breathing', tab: 'anxiety', next: 'anxiety:tool-suggested' },
+      { label: '📓 Write it in my journal', next: 'freeform:journal-nudge' },
+      { label: 'Something else is on my mind', next: 'start' },
+      { label: "I'm good for now", next: 'freeform:closeout' }
+    ]
+  },
+  'anxiety:evidence': {
+    messages: [
+      "That's fair — sometimes the fear is pointing at something real.",
+      "If some of it is true, what's ONE thing you could do about it in the next 24 hours? Just one.",
+      "You don't have to solve the whole thing tonight."
+    ],
+    free: true
+  },
+  'anxiety:tool-suggested': {
+    messages: [
+      "The toolkit's open in another tab — come back here whenever you're done.",
+      "Want to keep talking now, or check back in later?"
+    ],
+    chips: [
+      { label: '💬 Keep talking', next: 'start' },
+      { label: "I'll come back later", next: 'freeform:closeout' }
+    ]
+  },
+
+  /* ---------- DEPRESSION ---------- */
+  'depression:intro': {
+    messages: [
+      "Heavy days are real. I'm glad you came here.",
+      "When you say low or empty — is it more like sadness, or more like nothing, numb?"
+    ],
+    chips: [
+      { label: '😢 Sad or tearful', next: 'depression:sad' },
+      { label: '🌫️ Numb / nothing', next: 'depression:numb' },
+      { label: '😴 Just exhausted', next: 'depression:tired' }
+    ]
+  },
+  'depression:sad': {
+    messages: [
+      "Sad is exhausting because you still care — the caring is what hurts.",
+      "Can you name one thing that made today (or yesterday) worse than usual?"
+    ],
+    free: true
+  },
+  'depression:numb': {
+    messages: [
+      "Numb is depression's default setting. It's a symptom, not the truth.",
+      "The trick isn't to feel better right now — it's to do one micro-thing anyway. Existing counts.",
+      "What sounds most doable?"
+    ],
+    chips: [
+      { label: '💧 Drink some water', next: 'depression:tiny-win' },
+      { label: '🌞 Step outside for 2 min', next: 'depression:tiny-win' },
+      { label: '🚿 Wash my face', next: 'depression:tiny-win' },
+      { label: '☀️ Open the Micro-Wins tracker', tab: 'depression', next: 'anxiety:tool-suggested' }
+    ]
+  },
+  'depression:tired': {
+    messages: [
+      "Exhausted is also depression, not weakness. Your body's working overtime carrying this.",
+      "Have you eaten and drunk water today? Not asking to guilt-trip — just checking.",
+    ],
+    chips: [
+      { label: 'Yes to both', next: 'depression:momentum' },
+      { label: "Water yes, food no", next: 'depression:eat' },
+      { label: "Not really", next: 'depression:eat' }
+    ]
+  },
+  'depression:tiny-win': {
+    messages: [
+      "Okay — do that thing. Take five minutes.",
+      "When you come back, log it in the Micro-Wins tracker. That's not silly — it's how you rebuild momentum.",
+      "Come find me whenever."
+    ],
+    chips: [
+      { label: '☀️ Open Micro-Wins', tab: 'depression', next: 'freeform:closeout' },
+      { label: '💬 Something else', next: 'start' }
+    ]
+  },
+  'depression:eat': {
+    messages: [
+      "Start there. Anything counts — cereal, a granola bar, leftover pizza. Fuel first, feelings after.",
+      "Also: your virtual plant would like a sip. Tap 💧 I Drank Water when you do."
+    ],
+    chips: [
+      { label: '🌱 Take me to my Plant', tab: 'pet', next: 'freeform:closeout' },
+      { label: '💬 Something else', next: 'start' }
+    ]
+  },
+  'depression:momentum': {
+    messages: [
+      "Good — your body's got fuel. That's step one.",
+      "Depression lies and says nothing you do matters. Pick literally the smallest possible thing and do that one thing.",
+      "What sounds like the least painful next step?"
+    ],
+    chips: [
+      { label: '🚶 Move for 5 min', next: 'depression:tiny-win' },
+      { label: '📱 Text one person', next: 'depression:tiny-win' },
+      { label: '🎧 Play a comfort song', next: 'depression:tiny-win' },
+      { label: '📓 Write in journal', next: 'freeform:journal-nudge' }
+    ]
+  },
+
+  /* ---------- OVERWHELMED ---------- */
+  'overwhelmed:name': {
+    messages: [
+      "When everything piles up at once, it drowns out any next step.",
+      "Type just ONE thing on your list that keeps coming back."
+    ],
+    free: true
+  },
+  'overwhelmed:emotion': {
+    messages: () => [
+      "Got it. When you think about that specifically, what's the loudest emotion?"
+    ],
+    chips: [
+      { label: '😰 Anxious', next: 'overwhelmed:action' },
+      { label: '😤 Angry', next: 'overwhelmed:action' },
+      { label: '😔 Sad', next: 'overwhelmed:action' },
+      { label: '🌫️ Numb', next: 'overwhelmed:action' }
+    ]
+  },
+  'overwhelmed:action': {
+    messages: [
+      "That's real. Feelings are data — they're telling you this matters to you.",
+      "If you had 15 minutes right now to make it 1% better, what would you do?"
+    ],
+    free: true
+  },
+  'overwhelmed:capsule': {
+    messages: () => [
+      "That's a real next step. Please do just that one thing tonight.",
+      "One more thing that might help: the Time Capsule lets Future You write a letter about how this turned out.",
+      "It's weirdly comforting when you're in the thick of it."
+    ],
+    chips: [
+      { label: '⏳ Open Time Capsule', tab: 'capsule', next: 'freeform:closeout' },
+      { label: '💬 Something else', next: 'start' },
+      { label: "I'm good", next: 'freeform:closeout' }
+    ]
+  },
+
+  /* ---------- FAMILY ---------- */
+  'family:intro': {
+    messages: [
+      "Family stuff is heavy because they're supposed to be the safe people.",
+      "Is this a right-now fight, or something that's been building?"
+    ],
+    chips: [
+      { label: '🔥 Right-now fight', next: 'family:acute' },
+      { label: '⏳ Been building', next: 'family:chronic' },
+      { label: '💬 Just need to vent', next: 'family:vent' }
+    ]
+  },
+  'family:acute': {
+    messages: [
+      "First: get physical distance if you can. Bedroom, bathroom, outside. Regulate your body before you say anything else.",
+      "Nothing productive happens mid-fight. Both of you are in fight-or-flight.",
+      "When you're calmer, what do you actually want them to hear?"
+    ],
+    free: true
+  },
+  'family:chronic': {
+    messages: [
+      "Chronic stuff needs a different tool — a script for a calm moment, not a fix in the heat.",
+      "What's the theme? Pick the closest one."
+    ],
+    chips: [
+      { label: '📚 Grades / academic pressure', next: 'family:script:academic' },
+      { label: '🚪 Privacy or independence', next: 'family:script:privacy' },
+      { label: '👶 Sibling responsibility', next: 'family:script:sibling' },
+      { label: '🎯 Career / future path', next: 'family:script:future' }
+    ]
+  },
+  'family:script:academic': {
+    messages: [
+      "Try something like: \"I know you want the best for me. Right now the pressure is making me shut down instead of do more. Can we talk about what 'trying hard' actually looks like, without it being about grades alone?\"",
+      "Bring it up when nobody's already upset. Say it once, not five times."
+    ],
+    chips: [
+      { label: '📓 Save that to journal', next: 'freeform:journal-nudge' },
+      { label: '⏳ Time Capsule this', tab: 'capsule', next: 'freeform:closeout' },
+      { label: '💬 Something else', next: 'start' }
+    ]
+  },
+  'family:script:privacy': {
+    messages: [
+      "Try: \"I love you and I'm not hiding anything. I just need my room / phone / friend group to be mine. Trust is built by giving me some room to make small choices.\"",
+      "Ask for ONE specific thing (not everything at once), at a calm moment."
+    ],
+    chips: [
+      { label: '📓 Save that to journal', next: 'freeform:journal-nudge' },
+      { label: '💬 Something else', next: 'start' }
+    ]
+  },
+  'family:script:sibling': {
+    messages: [
+      "Try: \"I love [sibling]. And I'm 17 [or whatever], not their parent. I need one afternoon a week that's mine.\"",
+      "You're allowed to feel both love AND resentment. Both are true. That's not being a bad sibling."
+    ],
+    chips: [
+      { label: '📓 Save that to journal', next: 'freeform:journal-nudge' },
+      { label: '💬 Something else', next: 'start' }
+    ]
+  },
+  'family:script:future': {
+    messages: [
+      "Try: \"I appreciate the path you had in mind for me. I'm figuring out what fits me too, and that might look different. It doesn't mean I'm rejecting you.\"",
+      "You don't have to know your whole life plan to push back on someone else's plan for you."
+    ],
+    chips: [
+      { label: '⏳ Time Capsule this fear', tab: 'capsule', next: 'freeform:closeout' },
+      { label: '💬 Something else', next: 'start' }
+    ]
+  },
+  'family:vent': {
+    messages: [
+      "Go ahead. Type whatever you'd say if you didn't have to filter."
+    ],
+    free: true
+  },
+
+  /* ---------- SCHOOL ---------- */
+  'school:intro': {
+    messages: [
+      "School stress is real. Grades feel permanent but they aren't.",
+      "What's the specific thing that's spiraling?"
+    ],
+    chips: [
+      { label: '📝 An upcoming test / final', next: 'school:test' },
+      { label: '📄 An assignment I haven\'t started', next: 'school:procrastination' },
+      { label: '📊 My overall grade', next: 'school:overall' },
+      { label: '🎓 College apps / future', next: 'school:college' }
+    ]
+  },
+  'school:test': {
+    messages: [
+      "Studying anxious = studying inefficient. Fix the anxiety first, then the studying.",
+      "Do 5 min of box breathing, then pick ONE topic and set a 25-min timer. Just that one topic.",
+      "Momentum > perfection."
+    ],
+    chips: [
+      { label: '🌬️ Box breathing first', tab: 'anxiety', next: 'anxiety:tool-suggested' },
+      { label: '💬 Something else', next: 'start' }
+    ]
+  },
+  'school:procrastination': {
+    messages: [
+      "Procrastination is usually anxiety in disguise. Your brain avoids scary things.",
+      "Trick it: set a 5-min timer. Open the doc. Type ONE line. That's the whole goal.",
+      "Almost always, you'll keep going once the door is open."
+    ],
+    chips: [
+      { label: '💬 Something else', next: 'start' },
+      { label: "I'm gonna go do it", next: 'freeform:closeout' }
+    ]
+  },
+  'school:overall': {
+    messages: [
+      "Grades feel like your whole future. They aren't. Nobody at 25 looks at their transcript.",
+      "But: is there a real gap you can close, or is this more of a perfectionism spiral?"
+    ],
+    chips: [
+      { label: '📉 Real gap', next: 'school:gap' },
+      { label: '🌀 Perfectionism', next: 'school:perfectionism' }
+    ]
+  },
+  'school:gap': {
+    messages: [
+      "Okay. Pick ONE class and email the teacher this week asking what's the highest-impact way to bring the grade up.",
+      "Teachers respect students who ask. They don't respect students who pretend everything's fine and crash."
+    ],
+    chips: [
+      { label: '💬 Something else', next: 'start' },
+      { label: "I'm good", next: 'freeform:closeout' }
+    ]
+  },
+  'school:perfectionism': {
+    messages: [
+      "Perfectionism protects you from ever finding out where your ceiling is. That's what makes it so sticky.",
+      "Practice: turn something in at 90%. On purpose. Watch the world not end.",
+      "That skill is worth more than any grade."
+    ],
+    chips: [
+      { label: '⏳ Letter from Future Me', tab: 'capsule', next: 'freeform:closeout' },
+      { label: '💬 Something else', next: 'start' }
+    ]
+  },
+  'school:college': {
+    messages: [
+      "College anxiety lies about scarcity. Thousands of paths lead to a good life.",
+      "Almost everyone ends up happy at their eventual school — because YOU make it good.",
+      "Want a Time Capsule letter from Future You about how it actually turned out?"
+    ],
+    chips: [
+      { label: '⏳ Yes, open Time Capsule', tab: 'capsule', next: 'freeform:closeout' },
+      { label: '💬 Just keep talking', next: 'freeform:open' }
+    ]
+  },
+
+  /* ---------- FRIENDS ---------- */
+  'friends:intro': {
+    messages: [
+      "Social stuff at your age is brutal. Cliques, group chats, being left out — it all messes with your head.",
+      "What's the flavor of what happened?"
+    ],
+    chips: [
+      { label: '👻 Ghosted or left out', next: 'friends:leftout' },
+      { label: '💔 Someone hurt me', next: 'friends:hurt' },
+      { label: '💘 Crush / relationship', next: 'friends:romance' },
+      { label: '💭 I feel really lonely', next: 'friends:lonely' }
+    ]
+  },
+  'friends:leftout': {
+    messages: [
+      "Being left out hurts in a really specific, visceral way — humans are wired to detect it.",
+      "It usually says more about the group's dynamic than about you being unlikeable.",
+      "Real friends make you feel calmer. Not anxious about whether they'll flake.",
+      "Is there one person you'd feel safer with even one-on-one?"
+    ],
+    free: true
+  },
+  'friends:hurt': {
+    messages: [
+      "That kind of hurt takes real time. Don't rush past it.",
+      "Do you want to repair the friendship, or do you want to protect yourself and step back?"
+    ],
+    chips: [
+      { label: '🔧 Try to repair', next: 'friends:repair' },
+      { label: '🚶 Step back', next: 'friends:distance' },
+      { label: 'Not sure', next: 'friends:think' }
+    ]
+  },
+  'friends:repair': {
+    messages: [
+      "Repair usually starts with owning your part first, then naming theirs.",
+      "\"Hey — the thing yesterday hurt. I don't want to fight, I want to fix it. Can we talk?\"",
+      "If they respond well, you have real info. If they blow you off, that's also real info."
+    ],
+    chips: [
+      { label: '📓 Save that to journal', next: 'freeform:journal-nudge' },
+      { label: '💬 Something else', next: 'start' }
+    ]
+  },
+  'friends:distance': {
+    messages: [
+      "Stepping back doesn't have to be dramatic. You just do it. Reply less, hang out less, spend that time on people who feel easier.",
+      "You don't owe anyone an announcement about it.",
+    ],
+    chips: [
+      { label: '💬 Something else', next: 'start' },
+      { label: "That's helpful", next: 'freeform:closeout' }
+    ]
+  },
+  'friends:think': {
+    messages: [
+      "Sit with it for a couple of days. Big friendship decisions almost never need to happen tonight.",
+      "In the meantime — write it out in the journal so it's not just looping in your head."
+    ],
+    chips: [
+      { label: '📓 Open journal', next: 'freeform:journal-nudge' },
+      { label: '💬 Something else', next: 'start' }
+    ]
+  },
+  'friends:romance': {
+    messages: [
+      "Romantic stuff is wild at this age — your brain treats it like life-or-death.",
+      "Is this a crush, a real relationship, or a breakup / rejection?"
+    ],
+    chips: [
+      { label: '💘 Crush', next: 'friends:crush' },
+      { label: '❤️ In a relationship', next: 'friends:in-relationship' },
+      { label: '💔 Breakup / rejection', next: 'friends:breakup' }
+    ]
+  },
+  'friends:crush': {
+    messages: [
+      "Crushes feel intense — that intensity is real, it just isn't information about the future.",
+      "A useful question: do you know this person, or do you know the IDEA of this person?",
+      "If it's the idea, sometimes just meeting them once dissolves it. Either way you learn."
+    ],
+    chips: [
+      { label: '💬 Something else', next: 'start' },
+      { label: "Good, that helped", next: 'freeform:closeout' }
+    ]
+  },
+  'friends:in-relationship': {
+    messages: [
+      "Two quick check-ins: does this person make you feel more like yourself, or less like yourself?",
+      "Do they make you feel calmer, or more anxious?",
+      "If it's more/calmer — good sign. If it's less/anxious — that's real information."
+    ],
+    chips: [
+      { label: '💬 Something else', next: 'start' },
+      { label: "I need to think about that", next: 'freeform:closeout' }
+    ]
+  },
+  'friends:breakup': {
+    messages: [
+      "Breakups genuinely feel like grief — your brain treats them like a real loss. It IS a real loss.",
+      "Rules for the first two weeks: cry when you need to. Sad playlist. Sleep. No stalking their profiles.",
+      "In a month you'll feel colors again. In three, most of your life will feel yours again."
+    ],
+    chips: [
+      { label: '☀️ Something uplifting', tab: 'depression', next: 'anxiety:tool-suggested' },
+      { label: '💬 Something else', next: 'start' }
+    ]
+  },
+  'friends:lonely': {
+    messages: [
+      "Loneliness in a full building of people is its own specific kind of awful.",
+      "It doesn't mean you're unlovable. It usually means you're going through something bigger than the people around you know.",
+      "Micro-step: text ONE person a meme today. No pressure to have a conversation. Just a signal."
+    ],
+    chips: [
+      { label: '🏡 Add them to My Space', tab: 'safespace', next: 'anxiety:tool-suggested' },
+      { label: '💬 Something else', next: 'start' }
+    ]
+  },
+
+  /* ---------- SUBSTANCE ---------- */
+  'substance:intro': {
+    messages: [
+      "Zero judgment here. Substance stuff is common at your age and doesn't make you a bad person.",
+      "What's this about?"
+    ],
+    chips: [
+      { label: "🔥 I'm dealing with a craving", next: 'substance:craving' },
+      { label: "🤔 I'm trying to cut back", next: 'substance:cutback' },
+      { label: "👥 Someone in my life is using", next: 'substance:family' },
+      { label: "❓ Peer pressure at parties", next: 'substance:peer' }
+    ]
+  },
+  'substance:craving': {
+    messages: [
+      "Cravings peak in about 15-20 minutes and then fade. Even the strongest ones.",
+      "The Ride the Wave visualizer on the Safety tab literally works for this — cravings ARE waves.",
+      "Right now: chew gum, cold water, one push-up. Give your body a competing signal."
+    ],
+    chips: [
+      { label: '🛡️ Open Ride the Wave', tab: 'selfharm', next: 'anxiety:tool-suggested' },
+      { label: '💬 Just keep talking', next: 'freeform:open' }
+    ]
+  },
+  'substance:cutback': {
+    messages: [
+      "Cutting back is real work. Every time you didn't use — even when it was hard — that adds up in ways you can't feel yet.",
+      "What are you cutting back on? (nicotine / weed / alcohol / other)"
+    ],
+    free: true
+  },
+  'substance:family': {
+    messages: [
+      "That's a lot to carry. You're not responsible for their choices, even when it feels like you should be able to fix it.",
+      "Alateen is free, confidential, and specifically for teens whose family members are using. al-anon.org/teen",
+      "It's for you, not them."
+    ],
+    chips: [
+      { label: '🆘 Show me hotlines', action: () => openCrisisModal(), next: 'freeform:closeout' },
+      { label: '💬 Something else', next: 'start' }
+    ]
+  },
+  'substance:peer': {
+    messages: [
+      "Refusal scripts for when someone hands you a vape/drink/pill:",
+      "Casual: \"Nah I'm good, got a drug test coming up for [sport / job].\"",
+      "Direct: \"My stomach can't handle it.\" or \"Meds don't mix with it.\"",
+      "Deflect: \"I'm already on my third energy drink.\" You don't owe anyone a real reason."
+    ],
+    chips: [
+      { label: '📓 Save these to journal', next: 'freeform:journal-nudge' },
+      { label: '💬 Something else', next: 'start' }
+    ]
+  },
+
+  /* ---------- SAFETY (self-harm / suicidal ideation) ---------- */
+  'safety:check': {
+    messages: [
+      "Thank you for saying that out loud. That takes real courage.",
+      "First — are you safe right now? Meaning: no immediate plan to hurt yourself in the next few hours?"
+    ],
+    chips: [
+      { label: "✅ Safe for now, just struggling", next: 'safety:urge' },
+      { label: "⚠️ Not sure", danger: true, next: 'safety:not-sure' },
+      { label: "🚨 I'm not safe", danger: true, action: () => openCrisisModal(), next: 'safety:crisis' }
+    ]
+  },
+  'safety:urge': {
+    messages: [
+      "Okay. Urges peak within 10-20 minutes and then fade. You can outlast this one.",
+      "The Ride the Wave visualizer is literally built for this. Tap the water, breathe with the orb, watch the wave calm.",
+      "Or we can keep talking. Whatever feels doable."
+    ],
+    chips: [
+      { label: '🛡️ Open Ride the Wave', tab: 'selfharm', primary: true, next: 'safety:aftercare' },
+      { label: '🆘 Show me hotlines', action: () => openCrisisModal(), next: 'safety:aftercare' },
+      { label: '💬 Keep talking', next: 'safety:talk' }
+    ]
+  },
+  'safety:not-sure': {
+    messages: [
+      "That's really honest. Uncertainty here is a signal that this needs a real person, not just me.",
+      "988 is free, confidential, 24/7 — call OR text. They talk to teens all the time and they don't send police for just talking.",
+      "Please open the crisis panel right now."
+    ],
+    chips: [
+      { label: '🆘 Open Crisis Help', primary: true, action: () => openCrisisModal(), next: 'safety:aftercare' },
+      { label: '💬 I need to talk more first', next: 'safety:talk' }
+    ]
+  },
+  'safety:crisis': {
+    messages: [
+      "I'm really glad you're telling me. Please stay with the Crisis Help panel that just opened.",
+      "Call OR text 988 right now. If you can't, text HOME to 741741.",
+      "You matter. This gets survivable. Real people are on the other side of that number tonight."
+    ],
+    chips: [
+      { label: '🆘 Reopen Crisis Help', action: () => openCrisisModal() },
+      { label: "I'm on the phone with them", next: 'safety:on-call' }
+    ]
+  },
+  'safety:on-call': {
+    messages: [
+      "Good. Stay with them. I'll be here whenever you come back.",
+      "Take care of you. 🌸"
+    ],
+    end: true
+  },
+  'safety:talk': {
+    messages: [
+      "Okay. Tell me what's going on. I'm listening."
+    ],
+    free: true
+  },
+  'safety:aftercare': {
+    messages: [
+      "When you're back from that, come tell me you're okay. I'll be here.",
+      "Also: your safety plan lives on the Safety tab if you want to fill it in for next time."
+    ],
+    chips: [
+      { label: "🛡️ Fill in safety plan", tab: 'selfharm', next: 'freeform:closeout' },
+      { label: "I'm back and safer", next: 'safety:safer' },
+      { label: "Just want to be done", end: true }
+    ]
+  },
+  'safety:safer': {
+    messages: [
+      "That's huge. Seriously.",
+      "How about we water your plant for making it through this? 🌱"
+    ],
+    chips: [
+      { label: '🌱 Take me to my plant', tab: 'pet', next: 'freeform:closeout' },
+      { label: '💬 Something else', next: 'start' },
+      { label: "I'm good", end: true }
+    ]
+  },
+
+  /* ---------- FREEFORM / OPEN-ENDED ---------- */
+  'freeform:open': {
+    messages: [
+      "Okay — I'm here. Tell me what's on your mind."
+    ],
+    free: true
+  },
+  'freeform:journal-nudge': {
+    messages: [
+      "That belongs on paper (metaphorically). Type it in your journal below — it'll save automatically.",
+      "Getting it out of your head is half the work."
+    ],
+    chips: [
+      { label: '💬 Something else', next: 'start' },
+      { label: "I'll write it now", end: true }
+    ]
+  },
+  'freeform:closeout': {
+    messages: [
+      "Anytime. I'm always here.",
+      "Come back whenever — I don't get tired. 🌸"
+    ],
+    chips: [
+      { label: '💬 Actually, one more thing', next: 'start' },
+      { label: '🌱 Check on my plant', tab: 'pet', end: true },
+      { label: "I'm good", end: true }
+    ]
+  }
+};
+
+/* ============================================================================
+   FREE-TEXT HANDLING — keyword-routing when the user types instead of tapping
+   ============================================================================ */
+
+/* Simple category detection for free-text (fallback / freeform state) */
+const FREETEXT_ROUTES = [
+  { keywords: ['hurt myself', 'self harm', 'self-harm', 'cutting', 'kill myself', 'kms', 'suicide', 'suicidal', 'end it', 'want to die', 'not worth living'], next: 'safety:check' },
+  { keywords: ['panic', 'anxious', 'anxiety', 'racing heart', 'chest tight', 'freaking out'], next: 'anxiety:intensity' },
+  { keywords: ['depressed', 'empty', 'numb', 'hopeless', 'no motivation'], next: 'depression:intro' },
+  { keywords: ['overwhelmed', 'too much', 'drowning', 'stressed', 'stress'], next: 'overwhelmed:name' },
+  { keywords: ['parents', 'family', 'mom', 'dad', 'mother', 'father', 'sibling'], next: 'family:intro' },
+  { keywords: ['test', 'exam', 'final', 'grade', 'gpa', 'homework', 'school', 'college'], next: 'school:intro' },
+  { keywords: ['friend', 'lonely', 'ghosted', 'crush', 'breakup', 'boyfriend', 'girlfriend'], next: 'friends:intro' },
+  { keywords: ['vape', 'weed', 'drunk', 'alcohol', 'craving', 'addicted', 'quit smoking'], next: 'substance:intro' }
+];
+
+/* Warm fallback if we can't detect a topic */
+const FREETEXT_FALLBACKS = [
+  "I hear you. Tell me a little more — what's the heaviest part right now?",
+  "Thank you for trusting me with that. If you had to name the loudest feeling, what would you call it?",
+  "That sounds like a lot. Do you want practical steps, or just to be heard first?",
+  "I'm listening. Keep going — what happened right before you noticed this?",
+  "Okay. If a friend was telling YOU this exact thing, what would you say back to them?"
+];
+
+/* Special handling for free-text responses to specific bot questions */
+function handleFreeText(text) {
+  const lower = text.toLowerCase();
+
+  // Route by current state — some free-text nodes have specific follow-ups
+  if (chatState === 'anxiety:thoughts') {
+    goToState('anxiety:reframe');
+    return;
+  }
+  if (chatState === 'depression:sad') {
+    // Just validate + offer next steps
+    respondAndReturn([
+      "That's a lot to carry. Naming it is real work — most people don't get that far.",
+      "What sounds like it would help even 1% right now?"
+    ], [
+      { label: '💬 Keep talking', next: 'freeform:open' },
+      { label: '📓 Write it in journal', next: 'freeform:journal-nudge' },
+      { label: '🌱 Water my plant', tab: 'pet', next: 'freeform:closeout' }
+    ]);
+    return;
+  }
+  if (chatState === 'overwhelmed:name') {
+    goToState('overwhelmed:emotion');
+    return;
+  }
+  if (chatState === 'overwhelmed:action') {
+    goToState('overwhelmed:capsule');
+    return;
+  }
+  if (chatState === 'anxiety:evidence') {
+    respondAndReturn([
+      "Good — that's a concrete lever. Do just that thing. The rest can wait.",
+      "Once it's done, come back and tell me how it went."
+    ], [
+      { label: '⏳ Time Capsule this', tab: 'capsule', next: 'freeform:closeout' },
+      { label: '💬 Something else', next: 'start' }
+    ]);
+    return;
+  }
+  if (chatState === 'family:acute' || chatState === 'family:vent') {
+    respondAndReturn([
+      "That's real. Get it all out — no filter needed here.",
+      "Do you want a script for what to say to them, or do you just want to keep venting?"
+    ], [
+      { label: '💬 Give me a script', next: 'family:chronic' },
+      { label: '💬 Just vent more', next: 'family:vent' },
+      { label: '📓 Save to journal', next: 'freeform:journal-nudge' }
+    ]);
+    return;
+  }
+  if (chatState === 'friends:leftout') {
+    respondAndReturn([
+      "That's a real person to lean on. Text them today — even just a meme.",
+      "One connection at a time. That's how it rebuilds."
+    ], [
+      { label: '🏡 Add them to My Space', tab: 'safespace', next: 'freeform:closeout' },
+      { label: '💬 Something else', next: 'start' }
+    ]);
+    return;
+  }
+  if (chatState === 'safety:talk') {
+    respondAndReturn([
+      "I hear you. Please stay with me here — and please open the crisis panel too.",
+      "Real people are trained for exactly this. You don't have to handle it alone tonight."
+    ], [
+      { label: '🆘 Open Crisis Help', primary: true, action: () => openCrisisModal(), next: 'safety:aftercare' },
+      { label: '💬 Keep talking', next: 'safety:talk' }
+    ]);
+    return;
+  }
+  if (chatState === 'substance:cutback') {
+    respondAndReturn([
+      "Respect for even trying. Cravings are 15-min waves — they always fade.",
+      "The Ride the Wave visualizer on Safety works for this too."
+    ], [
+      { label: '🛡️ Ride the Wave', tab: 'selfharm', next: 'freeform:closeout' },
+      { label: '💬 Keep talking', next: 'freeform:open' }
+    ]);
+    return;
+  }
+
+  // Global keyword routing — pick the best matching topic and jump into its flow
+  for (const route of FREETEXT_ROUTES) {
+    if (route.keywords.some(k => lower.includes(k))) {
+      goToState(route.next);
+      return;
+    }
+  }
+
+  // Freeform continuation — warm fallback + offer chips
+  const reply = FREETEXT_FALLBACKS[Math.floor(Math.random() * FREETEXT_FALLBACKS.length)];
+  respondAndReturn([reply], [
+    { label: '💬 Show me topics again', next: 'start' },
+    { label: '📓 Write it in journal', next: 'freeform:journal-nudge' },
+    { label: '🌬️ Try a technique', tab: 'anxiety', next: 'freeform:closeout' }
+  ]);
+}
+
+async function respondAndReturn(messages, chips) {
+  for (let i = 0; i < messages.length; i++) {
+    showTyping();
+    await sleep(600 + Math.min(messages[i].length * 15, 800));
+    hideTyping();
+    appendBotBubble(messages[i]);
+    if (i < messages.length - 1) await sleep(200);
+  }
+  if (chips) {
+    await sleep(150);
+    showChips(chips);
+  }
+}
+
+/* ============================================================================
+   PUBLIC API — called from the outside
+   ============================================================================ */
+function initChatAssistant() {
+  const messages = document.getElementById('chat-messages');
+  if (!messages) return;
+  messages.innerHTML = '';
+  clearChips();
+  chatState = 'start';
+  chatHistory = [];
+  chatDone = false;
+  goToState('start');
+}
+
+function resetChat() {
+  initChatAssistant();
+}
+
+function handleChatKeyPress(e) {
+  if (e.key === 'Enter') sendChatMessage();
+}
+
+function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  if (!input || !input.value.trim()) return;
+  const text = input.value.trim();
+  input.value = '';
+
+  appendUserBubble(text);
+  clearChips();
+  handleFreeText(text);
+}
+
+/* ============================================================================
+   JOURNAL (unchanged)
+   ============================================================================ */
 function saveJournalEntry() {
   const input = document.getElementById('journal-input');
   if (!input) return;

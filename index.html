@@ -118,42 +118,29 @@
   <!-- MAIN BODY WRAPPER -->
   <div class="main-wrapper">
 
-    <!-- SIDEBAR NAV -->
+    <!-- SIDEBAR NAV — condensed into 4 groups -->
     <nav class="sidebar-nav">
-      <div class="nav-section-title">Core Sanctuary</div>
-      <a class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')">
-        <span class="nav-icon">🏠</span> Dashboard
+      <a class="nav-item active" data-group="home" data-tab="dashboard" onclick="switchTab('dashboard')">
+        <span class="nav-icon">🏠</span> Home
       </a>
-      <a class="nav-item" data-tab="anxiety" onclick="switchTab('anxiety')">
-        <span class="nav-icon">🌬️</span> Anxiety & Panic
+      <a class="nav-item" data-group="assistant" data-tab="journal" onclick="switchTab('journal')">
+        <span class="nav-icon">💬</span> AI Assistant
       </a>
-      <a class="nav-item" data-tab="depression" onclick="switchTab('depression')">
-        <span class="nav-icon">☀️</span> Depression & Energy
+      <a class="nav-item" data-group="toolkits" data-tab="anxiety" onclick="switchTab('anxiety')">
+        <span class="nav-icon">🧰</span> Toolkits
       </a>
-      <a class="nav-item" data-tab="selfharm" onclick="switchTab('selfharm')">
-        <span class="nav-icon">🛡️</span> Self-Harm Safety
-      </a>
-      <a class="nav-item" data-tab="journal" onclick="switchTab('journal')">
-        <span class="nav-icon">📓</span> Venting & AI Assistant
-      </a>
-
-      <div class="nav-section-title" style="margin-top:14px;">Grow & Reflect</div>
-      <a class="nav-item" data-tab="safespace" onclick="switchTab('safespace')">
-        <span class="nav-icon">🏡</span> My Safe Space
-      </a>
-      <a class="nav-item" data-tab="pet" onclick="switchTab('pet')">
-        <span class="nav-icon">🌱</span> Virtual Plant
-      </a>
-      <a class="nav-item" data-tab="capsule" onclick="switchTab('capsule')">
-        <span class="nav-icon">⏳</span> Time Capsule
-      </a>
-      <a class="nav-item" data-tab="reminders" onclick="switchTab('reminders')">
-        <span class="nav-icon">🔔</span> Reminders
+      <a class="nav-item" data-group="myspace" data-tab="safespace" onclick="switchTab('safespace')">
+        <span class="nav-icon">🏡</span> My Space
       </a>
     </nav>
 
     <!-- CONTENT PANES -->
     <main class="content-container">
+
+      <!-- SUB-NAV strip: appears above content when a group has multiple tabs -->
+      <div class="sub-nav" id="sub-nav" style="display:none;">
+        <!-- populated by app.js -->
+      </div>
 
       <!-- TAB 1: DASHBOARD -->
       <section id="tab-dashboard" class="tab-pane active">
@@ -246,79 +233,43 @@
           </div>
         </div>
 
-        <!-- FEATURE TILES -->
-        <h3 style="font-size:1.15rem; font-weight:800; margin-top:24px;">Explore Sanctuary Toolkits</h3>
+        <!-- FEATURE TILES — condensed to 4 -->
+        <h3 style="font-size:1.15rem; font-weight:800; margin-top:24px;">Where do you want to go?</h3>
         <div class="cards-grid" style="margin-top:14px;">
+          <div class="feature-card" onclick="switchTab('journal')">
+            <div>
+              <div class="card-header-icon card-parental" style="background:var(--bg-lavender-subtle);">💬</div>
+              <h4 class="card-title">AI Assistant</h4>
+              <p class="card-desc">Talk it through. Guided support for anxiety, depression, family, school, and more — plus your private journal and Time Capsule.</p>
+            </div>
+            <div class="card-action">Open Chat &rarr;</div>
+          </div>
+
           <div class="feature-card" onclick="switchTab('anxiety')">
             <div>
-              <div class="card-header-icon card-anxiety">🌬️</div>
-              <h4 class="card-title">Anxiety & Panic Relief</h4>
-              <p class="card-desc">Interactive box breathing, 5-4-3-2-1 sensory grounding, and cognitive thought reframing.</p>
+              <div class="card-header-icon card-anxiety">🧰</div>
+              <h4 class="card-title">Coping Toolkits</h4>
+              <p class="card-desc">Box breathing, grounding, thought reframing, micro-wins, urge-surfing wave, distraction game, safety plan.</p>
             </div>
-            <div class="card-action">Breathe Now &rarr;</div>
-          </div>
-
-          <div class="feature-card" onclick="switchTab('depression')">
-            <div>
-              <div class="card-header-icon card-depression">☀️</div>
-              <h4 class="card-title">Depression & Energy</h4>
-              <p class="card-desc">Micro-wins tracker, energy momentum logger, and gentle uplifting affirmation cards.</p>
-            </div>
-            <div class="card-action">Track Micro-Wins &rarr;</div>
-          </div>
-
-          <div class="feature-card" onclick="switchTab('selfharm')">
-            <div>
-              <div class="card-header-icon card-selfharm">🛡️</div>
-              <h4 class="card-title">Self-Harm Safety</h4>
-              <p class="card-desc">Interactive urge-surfing wave, safe sensory outlets, and personal safety plan.</p>
-            </div>
-            <div class="card-action">Safety Toolkit &rarr;</div>
-          </div>
-
-          <div class="feature-card" onclick="switchTab('capsule')">
-            <div>
-              <div class="card-header-icon" style="background:var(--bg-yellow-subtle); color:var(--accent-yellow-dark);">⏳</div>
-              <h4 class="card-title">Time Capsule from Future You</h4>
-              <p class="card-desc">Type what you're stressed about — receive a letter from your future self about how it works out.</p>
-            </div>
-            <div class="card-action">Open Time Capsule &rarr;</div>
-          </div>
-
-          <div class="feature-card" onclick="switchTab('pet')">
-            <div>
-              <div class="card-header-icon card-substance">🌱</div>
-              <h4 class="card-title">My Virtual Plant</h4>
-              <p class="card-desc">A plant that grows every time you check in, breathe, log a win, or drink water. Watch it bloom.</p>
-            </div>
-            <div class="card-action">Visit Your Plant &rarr;</div>
+            <div class="card-action">Open Toolkits &rarr;</div>
           </div>
 
           <div class="feature-card" onclick="switchTab('safespace')">
             <div>
-              <div class="card-header-icon card-parental">🏡</div>
-              <h4 class="card-title">My Safe Space</h4>
-              <p class="card-desc">Customize your own room: music, photos, affirmations, coping tools, and trusted contacts. All saved.</p>
+              <div class="card-header-icon card-substance">🏡</div>
+              <h4 class="card-title">My Space</h4>
+              <p class="card-desc">Customizable safe space, virtual plant that grows with healthy habits, and gentle wellness reminders.</p>
             </div>
-            <div class="card-action">Build Your Room &rarr;</div>
+            <div class="card-action">Visit Your Space &rarr;</div>
           </div>
 
-          <div class="feature-card" onclick="switchTab('reminders')">
+          <div class="feature-card" onclick="openCrisisModal()">
             <div>
-              <div class="card-header-icon" style="background:var(--bg-blue-subtle); color:var(--accent-blue-dark);">🔔</div>
-              <h4 class="card-title">Wellness Reminders</h4>
-              <p class="card-desc">Gentle water, meditation, breathing, and check-in nudges. Fully customizable.</p>
+              <div class="card-header-icon" style="background:rgba(244, 63, 94, 0.15); color:var(--accent-rose);">🆘</div>
+              <h4 class="card-title">Immediate Help</h4>
+              <p class="card-desc">24/7 free crisis hotlines: 988 Suicide & Crisis Lifeline, Trevor Project, Crisis Text Line, SAMHSA, and more.</p>
             </div>
-            <div class="card-action">Set Reminders &rarr;</div>
-          </div>
-
-          <div class="feature-card" onclick="switchTab('journal')">
-            <div>
-              <div class="card-header-icon card-parental" style="background:var(--bg-lavender-subtle);">📓</div>
-              <h4 class="card-title">getwell.ai Assistant</h4>
-              <p class="card-desc">Talk to your empathetic AI Grounding Assistant about anything — anxiety, family, substance, school. Includes private journal.</p>
-            </div>
-            <div class="card-action">Open Chat &rarr;</div>
+            <div class="card-action">Open Hotlines &rarr;</div>
           </div>
         </div>
       </section>
@@ -863,19 +814,22 @@
         <p style="color:var(--text-secondary); margin-bottom:20px;">Safe, empathetic AI grounding assistant and private encrypted-feeling local journal.</p>
 
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:22px;">
-          <!-- getwell.ai Companion -->
-          <div class="mood-bar-card">
-            <h3 style="font-size:1.15rem; font-weight:800;">🤖 getwell.ai Grounding Assistant</h3>
-            <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:10px;">Ask for coping strategies, grounding help, or venting support.</p>
-
+          <!-- getwell.ai Companion — Woebot-style guided chat -->
+          <div class="mood-bar-card" style="padding:16px;">
             <div class="chat-container">
-              <div class="chat-messages" id="chat-messages">
-                <div class="chat-bubble bot">
-                  👋 Hi! I'm your getwell.ai assistant. I'm here to listen, share grounding tips, and support you without any judgment. How are you holding up today?
+              <div class="chat-header">
+                <div class="chat-avatar">🌸</div>
+                <div class="chat-header-info">
+                  <h4>Ellie · getwell.ai</h4>
+                  <p>Your CBT-inspired support buddy</p>
                 </div>
+                <div class="chat-header-status">Online</div>
+                <button class="chat-header-reset" onclick="resetChat()" title="Start over">↻ Restart</button>
               </div>
-              <div class="chat-input-bar">
-                <input type="text" class="form-control" id="chat-input" placeholder="Type your message..." onkeypress="handleChatKeyPress(event)">
+              <div class="chat-messages" id="chat-messages"></div>
+              <div class="chat-chips" id="chat-chips" style="display:none;"></div>
+              <div class="chat-input-bar" id="chat-input-bar">
+                <input type="text" class="form-control" id="chat-input" placeholder="Or type your own message..." onkeypress="handleChatKeyPress(event)">
                 <button class="btn-primary" onclick="sendChatMessage()">Send</button>
               </div>
             </div>
